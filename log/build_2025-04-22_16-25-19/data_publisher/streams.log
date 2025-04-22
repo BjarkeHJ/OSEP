@@ -1,0 +1,46 @@
+[0.010s] Invoking command in '/home/airlab/OSEP/build/data_publisher': /usr/bin/cmake /home/airlab/OSEP/src/data_publisher -DCMAKE_INSTALL_PREFIX=/home/airlab/OSEP/install/data_publisher
+[0.020s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.129s] -- Found rclcpp: 16.0.12 (/opt/ros/humble/share/rclcpp/cmake)
+[0.152s] -- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.153s] -- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.158s] -- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.165s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.175s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.201s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.202s] -- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.279s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.322s] -- Found sensor_msgs: 4.8.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.347s] -- Found pcl_conversions: 2.4.5 (/opt/ros/humble/share/pcl_conversions/cmake)
+[0.374s] -- Eigen found (include: /usr/include/eigen3, version: 3.4.0)
+[0.397s] -- FLANN found (include: /usr/include, lib: /usr/lib/x86_64-linux-gnu/libflann_cpp.so)
+[0.614s] -- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)
+[0.619s] -- OpenNI2 found (version: 2.2.0.33, include: /usr/include/openni2, lib: /usr/lib/x86_64-linux-gnu/libOpenNI2.so;libusb::libusb)
+[0.731s] -- Eigen found (include: /usr/include/eigen3, version: 3.4.0)
+[0.735s] -- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)
+[0.740s] -- OpenNI2 found (version: 2.2.0.33, include: /usr/include/openni2, lib: /usr/lib/x86_64-linux-gnu/libOpenNI2.so;libusb::libusb)
+[0.848s] -- Found Qhull version 8.0.2
+[0.960s] -- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)
+[1.087s] -- Found ament_lint_auto: 0.12.12 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.088s] [0mCMake Error: File /home/airlab/OSEP/src/data_publisher/package.xml does not exist.[0m
+[1.088s] [31mCMake Error at /opt/ros/humble/share/ament_cmake_core/cmake/core/stamp.cmake:24 (configure_file):
+[1.088s]   configure_file Problem configuring file
+[1.088s] Call Stack (most recent call first):
+[1.088s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:73 (stamp)
+[1.088s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:49 (_ament_package_xml)
+[1.088s]   /opt/ros/humble/share/ament_lint_auto/cmake/ament_lint_auto_find_test_dependencies.cmake:31 (ament_package_xml)
+[1.088s]   CMakeLists.txt:50 (ament_lint_auto_find_test_dependencies)
+[1.088s] 
+[1.088s] [0m
+[1.088s] [0mCMake Error: File /home/airlab/OSEP/src/data_publisher/package.xml does not exist.[0m
+[1.088s] [31mCMake Error at /opt/ros/humble/share/ament_cmake_core/cmake/core/stamp.cmake:24 (configure_file):
+[1.088s]   configure_file Problem configuring file
+[1.088s] Call Stack (most recent call first):
+[1.088s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:73 (stamp)
+[1.088s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:49 (_ament_package_xml)
+[1.088s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package.cmake:63 (ament_package_xml)
+[1.088s]   CMakeLists.txt:53 (ament_package)
+[1.088s] 
+[1.088s] [0m
+[1.089s] -- Configuring incomplete, errors occurred!
+[1.090s] See also "/home/airlab/OSEP/build/data_publisher/CMakeFiles/CMakeOutput.log".
+[1.100s] Invoked command in '/home/airlab/OSEP/build/data_publisher' returned '1': /usr/bin/cmake /home/airlab/OSEP/src/data_publisher -DCMAKE_INSTALL_PREFIX=/home/airlab/OSEP/install/data_publisher

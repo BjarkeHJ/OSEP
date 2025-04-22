@@ -1,0 +1,2 @@
+Invoking command in '/home/airlab/OSEP/build/data_publisher': /usr/bin/cmake /home/airlab/OSEP/src/data_publisher -DCMAKE_INSTALL_PREFIX=/home/airlab/OSEP/install/data_publisher
+Invoked command in '/home/airlab/OSEP/build/data_publisher' returned '1': /usr/bin/cmake /home/airlab/OSEP/src/data_publisher -DCMAKE_INSTALL_PREFIX=/home/airlab/OSEP/install/data_publisher

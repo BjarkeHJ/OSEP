@@ -1,0 +1,12 @@
+[0.011s] Invoking command in '/home/airlab/OSEP/build/skel_extract': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/skel_extract -- -j8 -l8
+[0.055s] [ 33%] [32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_node.cpp.o[0m
+[0.056s] [ 66%] [32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_main.cpp.o[0m
+[0.958s] [01m[K/home/airlab/OSEP/src/skel_extract/src/skel_node.cpp:10:10:[m[K [01;31m[Kfatal error: [m[Kpcl_conversions/pcl_conversions.h: No such file or directory
+[0.958s]    10 | #include [01;31m[K<pcl_conversions/pcl_conversions.h>[m[K
+[0.958s]       |          [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[0.958s] compilation terminated.
+[0.967s] gmake[2]: *** [CMakeFiles/skel_extract.dir/build.make:76: CMakeFiles/skel_extract.dir/src/skel_node.cpp.o] Error 1
+[0.967s] gmake[2]: *** Waiting for unfinished jobs....
+[3.981s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/skel_extract.dir/all] Error 2
+[3.981s] gmake: *** [Makefile:146: all] Error 2
+[3.983s] Invoked command in '/home/airlab/OSEP/build/skel_extract' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/skel_extract -- -j8 -l8

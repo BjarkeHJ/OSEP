@@ -13,19 +13,21 @@ set(EXEC_NAME skel_extract)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
 # Dependencies list
 set(dependencies
     rclcpp
-    sensor_msgs)
+    sensor_msgs
+    pcl_conversions)
 
 # Other libraries
 find_package(Eigen3 REQUIRED)
 find_package(PCL 1.12 REQUIRED)
 
 add_executable(${EXEC_NAME}
-                src/node.cpp
-                src/main.cpp)
+                src/skel_node.cpp
+                src/skel_main.cpp)
 
 target_include_directories(${EXEC_NAME} PUBLIC
                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -34,10 +36,8 @@ target_include_directories(${EXEC_NAME} PUBLIC
 
 target_link_libraries(${EXEC_NAME} ${PCL_LIBRARIES} Eigen3::Eigen)
 ament_target_dependencies(${EXEC_NAME} ${dependencies})
+
 install(TARGETS ${EXEC_NAME} DESTINATION lib/${PROJECT_NAME})
-install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
-
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -1,0 +1,16 @@
+/home/airlab/OSEP/install/skel_extract/lib/skel_extract/skel_extract
+/home/airlab/OSEP/install/skel_extract/share/ament_index/resource_index/package_run_dependencies/skel_extract
+/home/airlab/OSEP/install/skel_extract/share/ament_index/resource_index/parent_prefix_path/skel_extract
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.sh
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.dsv
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/path.sh
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/path.dsv
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.bash
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.sh
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.zsh
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.dsv
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/package.dsv
+/home/airlab/OSEP/install/skel_extract/share/ament_index/resource_index/packages/skel_extract
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig.cmake
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig-version.cmake
+/home/airlab/OSEP/install/skel_extract/share/skel_extract/package.xml

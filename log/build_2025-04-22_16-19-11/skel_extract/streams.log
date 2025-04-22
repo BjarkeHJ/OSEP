@@ -1,0 +1,6 @@
+[0.009s] Invoking command in '/home/airlab/OSEP/build/skel_extract': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/skel_extract -- -j8 -l8
+[0.045s] [35m[1mConsolidate compiler generated dependencies of target skel_extract[0m
+[0.066s] [ 33%] [32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_node.cpp.o[0m
+[0.067s] [ 66%] [32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_main.cpp.o[0m
+[4.997s] [100%] [32m[1mLinking CXX executable skel_extract[0m
+[5.252s] [100%] Built target skel_extract

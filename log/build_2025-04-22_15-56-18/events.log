@@ -1,0 +1,240 @@
+[0.000000] (-) TimerEvent: {}
+[0.000162] (skel_extract) JobQueued: {'identifier': 'skel_extract', 'dependencies': OrderedDict()}
+[0.000213] (skel_extract) JobStarted: {'identifier': 'skel_extract'}
+[0.005846] (skel_extract) JobProgress: {'identifier': 'skel_extract', 'progress': 'cmake'}
+[0.006338] (skel_extract) Command: {'cmd': ['/usr/bin/cmake', '/home/airlab/OSEP/src/skel_extract', '-DCMAKE_INSTALL_PREFIX=/home/airlab/OSEP/install/skel_extract'], 'cwd': '/home/airlab/OSEP/build/skel_extract', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('CARB_APP_PATH', '/home/airlab/isaacsim/kit'), ('LANGUAGE', 'en_US:en'), ('USER', 'airlab'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/airlab'), ('CONDA_SHLVL', '0'), ('ISAAC_PATH', '/home/airlab/isaacsim'), ('OLDPWD', '/home/airlab'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '1860'), ('SYSTEMD_EXEC_PID', '2243'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('_CE_M', ''), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator23558193cd9818af7fe4d2c2f5bd9d00f'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '2645'), ('COLCON_PREFIX_PATH', '/home/airlab/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'airlab'), ('JOURNAL_STREAM', '8:20567'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'airlab'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('_CE_CONDA', ''), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/airlab/miniconda3/condabin:/opt/ros/humble/bin:/home/airlab/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/airlab-Predator-PO3-600:@/tmp/.ICE-unix/2074,unix/airlab-Predator-PO3-600:/tmp/.ICE-unix/2074'), ('EXP_PATH', '/home/airlab/isaacsim/apps'), ('INVOCATION_ID', '3f53238c9ec34ac388fc058596d3ea20'), ('XDG_MENU_PREFIX', 'gnome-'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'openssh'), ('SSH_AUTH_SOCK', '/run/user/1000/openssh_agent'), ('AMENT_PREFIX_PATH', '/home/airlab/OSEP/install/osep:/home/airlab/OSEP/install/skel_extract:/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/airlab/miniconda3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:7017762e-e7cb-48fc-8cba-7e90bcf81efb'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/airlab/OSEP/build/skel_extract'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/airlab/miniconda3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/airlab/isaacsim/../../..//opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/airlab/isaacsim/kit/python/lib/python3.10/site-packages:/home/airlab/isaacsim/python_packages:/home/airlab/isaacsim/exts/omni.isaac.kit:/home/airlab/isaacsim/kit/kernel/py:/home/airlab/isaacsim/kit/plugins/bindings-python:/home/airlab/isaacsim/exts/omni.isaac.lula/pip_prebundle:/home/airlab/isaacsim/exts/omni.exporter.urdf/pip_prebundle:/home/airlab/isaacsim/extscache/omni.kit.pip_archive-0.0.0+10a4b5c0.lx64.cp310/pip_prebundle:/home/airlab/isaacsim/exts/omni.isaac.core_archive/pip_prebundle:/home/airlab/isaacsim/exts/omni.isaac.ml_archive/pip_prebundle:/home/airlab/isaacsim/exts/omni.pip.compute/pip_prebundle:/home/airlab/isaacsim/exts/omni.pip.cloud/pip_prebundle'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/airlab/OSEP/install/osep:/home/airlab/OSEP/install/skel_extract:/opt/ros/humble')]), 'shell': False}
+[0.046183] (skel_extract) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.084719] (skel_extract) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.089873] (skel_extract) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.099245] (-) TimerEvent: {}
+[0.136496] (skel_extract) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.142683] (skel_extract) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.142890] (skel_extract) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.143174] (skel_extract) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.145499] (skel_extract) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.199369] (-) TimerEvent: {}
+[0.209011] (skel_extract) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.216021] (skel_extract) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.216241] (skel_extract) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.216572] (skel_extract) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.218012] (skel_extract) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.299447] (-) TimerEvent: {}
+[0.349342] (skel_extract) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[0.399573] (-) TimerEvent: {}
+[0.415891] (skel_extract) StdoutLine: {'line': b'-- Found rclcpp: 16.0.12 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[0.442963] (skel_extract) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.445921] (skel_extract) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.451331] (skel_extract) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.459575] (skel_extract) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.470939] (skel_extract) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.500817] (-) TimerEvent: {}
+[0.501058] (skel_extract) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[0.502611] (skel_extract) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[0.559051] (skel_extract) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[0.579878] (skel_extract) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[0.600928] (-) TimerEvent: {}
+[0.610512] (skel_extract) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[0.615676] (skel_extract) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[0.664815] (skel_extract) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[0.665120] (skel_extract) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[0.701042] (-) TimerEvent: {}
+[0.715899] (skel_extract) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[0.716708] (skel_extract) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[0.757264] (skel_extract) StdoutLine: {'line': b'-- Found sensor_msgs: 4.8.0 (/opt/ros/humble/share/sensor_msgs/cmake)\n'}
+[0.793874] (skel_extract) StdoutLine: {'line': b"-- Checking for module 'eigen3'\n"}
+[0.801148] (-) TimerEvent: {}
+[0.801703] (skel_extract) StdoutLine: {'line': b'--   Found eigen3, version 3.4.0\n'}
+[0.820506] (skel_extract) StdoutLine: {'line': b'-- Found Eigen: /usr/include/eigen3 (Required is at least version "3.1") \n'}
+[0.820623] (skel_extract) StdoutLine: {'line': b'-- Eigen found (include: /usr/include/eigen3, version: 3.4.0)\n'}
+[0.832984] (skel_extract) StdoutLine: {'line': b'-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found suitable version "1.74.0", minimum required is "1.65.0") found components: system filesystem date_time iostreams serialization \n'}
+[0.845061] (skel_extract) StdoutLine: {'line': b"-- Checking for module 'flann'\n"}
+[0.854107] (skel_extract) StdoutLine: {'line': b'--   Found flann, version 1.9.1\n'}
+[0.877970] (skel_extract) StdoutLine: {'line': b'-- Found FLANN: /usr/lib/x86_64-linux-gnu/libflann_cpp.so  \n'}
+[0.878089] (skel_extract) StdoutLine: {'line': b'-- FLANN found (include: /usr/include, lib: /usr/lib/x86_64-linux-gnu/libflann_cpp.so)\n'}
+[0.901262] (-) TimerEvent: {}
+[0.907468] (skel_extract) StdoutLine: {'line': b'-- Found GLEW: /usr/lib/x86_64-linux-gnu/libGLEW.so  \n'}
+[0.911473] (skel_extract) StdoutLine: {'line': b'-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so  found components: OpenGL GLX \n'}
+[1.001372] (-) TimerEvent: {}
+[1.007745] (skel_extract) StdoutLine: {'line': b'-- Found MPI_C: /usr/lib/x86_64-linux-gnu/libmpi.so (found version "3.1") \n'}
+[1.007969] (skel_extract) StdoutLine: {'line': b'-- Found MPI: TRUE (found version "3.1") found components: C \n'}
+[1.009657] (skel_extract) StdoutLine: {'line': b'-- Found JsonCpp: /usr/lib/x86_64-linux-gnu/libjsoncpp.so (found suitable version "1.9.5", minimum required is "0.7.0") \n'}
+[1.016642] (skel_extract) StdoutLine: {'line': b'-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.2.11") \n'}
+[1.031100] (skel_extract) StdoutLine: {'line': b'-- Found PNG: /usr/lib/x86_64-linux-gnu/libpng.so (found version "1.6.37") \n'}
+[1.040402] (skel_extract) StdoutLine: {'line': b'-- Found Eigen3: /usr/include/eigen3 (found version "3.4.0") \n'}
+[1.101546] (-) TimerEvent: {}
+[1.107055] (skel_extract) StdoutLine: {'line': b'-- Found X11: /usr/include   \n'}
+[1.107267] (skel_extract) StdoutLine: {'line': b'-- Looking for XOpenDisplay in /usr/lib/x86_64-linux-gnu/libX11.so;/usr/lib/x86_64-linux-gnu/libXext.so\n'}
+[1.159639] (skel_extract) StdoutLine: {'line': b'-- Looking for XOpenDisplay in /usr/lib/x86_64-linux-gnu/libX11.so;/usr/lib/x86_64-linux-gnu/libXext.so - found\n'}
+[1.159862] (skel_extract) StdoutLine: {'line': b'-- Looking for gethostbyname\n'}
+[1.201661] (-) TimerEvent: {}
+[1.207221] (skel_extract) StdoutLine: {'line': b'-- Looking for gethostbyname - found\n'}
+[1.207360] (skel_extract) StdoutLine: {'line': b'-- Looking for connect\n'}
+[1.257772] (skel_extract) StdoutLine: {'line': b'-- Looking for connect - found\n'}
+[1.257991] (skel_extract) StdoutLine: {'line': b'-- Looking for remove\n'}
+[1.301763] (-) TimerEvent: {}
+[1.324733] (skel_extract) StdoutLine: {'line': b'-- Looking for remove - found\n'}
+[1.325034] (skel_extract) StdoutLine: {'line': b'-- Looking for shmat\n'}
+[1.401866] (-) TimerEvent: {}
+[1.408661] (skel_extract) StdoutLine: {'line': b'-- Looking for shmat - found\n'}
+[1.408909] (skel_extract) StdoutLine: {'line': b'-- Looking for IceConnectionNumber in ICE\n'}
+[1.468854] (skel_extract) StdoutLine: {'line': b'-- Looking for IceConnectionNumber in ICE - found\n'}
+[1.501980] (-) TimerEvent: {}
+[1.523623] (skel_extract) StdoutLine: {'line': b'-- Found EXPAT: /usr/lib/x86_64-linux-gnu/libexpat.so (found version "2.4.7") \n'}
+[1.524915] (skel_extract) StdoutLine: {'line': b'-- Found double-conversion: /usr/lib/x86_64-linux-gnu/libdouble-conversion.so  \n'}
+[1.526648] (skel_extract) StdoutLine: {'line': b'-- Found LZ4: /usr/lib/x86_64-linux-gnu/liblz4.so (found version "1.9.3") \n'}
+[1.528076] (skel_extract) StdoutLine: {'line': b'-- Found LZMA: /usr/lib/x86_64-linux-gnu/liblzma.so (found version "5.2.5") \n'}
+[1.537187] (skel_extract) StdoutLine: {'line': b'-- Found JPEG: /usr/lib/x86_64-linux-gnu/libjpeg.so (found version "80") \n'}
+[1.540739] (skel_extract) StdoutLine: {'line': b'-- Found TIFF: /usr/lib/x86_64-linux-gnu/libtiff.so (found version "4.3.0")  \n'}
+[1.543959] (skel_extract) StdoutLine: {'line': b'-- Found Freetype: /usr/lib/x86_64-linux-gnu/libfreetype.so (found version "2.11.1") \n'}
+[1.548145] (skel_extract) StdoutLine: {'line': b'-- Found utf8cpp: /usr/include/utf8cpp  \n'}
+[1.597607] (skel_extract) StdoutLine: {'line': b"-- Checking for module 'libusb-1.0'\n"}
+[1.602067] (-) TimerEvent: {}
+[1.606606] (skel_extract) StdoutLine: {'line': b'--   Found libusb-1.0, version 1.0.25\n'}
+[1.627229] (skel_extract) StdoutLine: {'line': b'-- Found libusb: /usr/lib/x86_64-linux-gnu/libusb-1.0.so  \n'}
+[1.628316] (skel_extract) StdoutLine: {'line': b'-- Found OpenNI: /usr/lib/libOpenNI.so;libusb::libusb (found version "1.5.4.0") \n'}
+[1.628398] (skel_extract) StdoutLine: {'line': b'-- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)\n'}
+[1.661912] (skel_extract) StdoutLine: {'line': b'-- Found OpenNI2: /usr/lib/x86_64-linux-gnu/libOpenNI2.so;libusb::libusb (found version "2.2.0.33") \n'}
+[1.662034] (skel_extract) StdoutLine: {'line': b'-- OpenNI2 found (version: 2.2.0.33, include: /usr/include/openni2, lib: /usr/lib/x86_64-linux-gnu/libOpenNI2.so;libusb::libusb)\n'}
+[1.662146] (skel_extract) StderrLine: {'line': b'\x1b[0m** WARNING ** io features related to pcap will be disabled\x1b[0m\n'}
+[1.702181] (-) TimerEvent: {}
+[1.778606] (skel_extract) StdoutLine: {'line': b'-- Eigen found (include: /usr/include/eigen3, version: 3.4.0)\n'}
+[1.782927] (skel_extract) StdoutLine: {'line': b'-- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)\n'}
+[1.787276] (skel_extract) StdoutLine: {'line': b'-- OpenNI2 found (version: 2.2.0.33, include: /usr/include/openni2, lib: /usr/lib/x86_64-linux-gnu/libOpenNI2.so;libusb::libusb)\n'}
+[1.802296] (-) TimerEvent: {}
+[1.899343] (skel_extract) StdoutLine: {'line': b'-- Found Qhull version 8.0.2\n'}
+[1.902389] (-) TimerEvent: {}
+[2.002570] (-) TimerEvent: {}
+[2.011040] (skel_extract) StdoutLine: {'line': b'-- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)\n'}
+[2.102658] (-) TimerEvent: {}
+[2.121423] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_COMMON\n'}
+[2.122187] (skel_extract) StdoutLine: {'line': b'-- Found PCL_COMMON: /usr/lib/x86_64-linux-gnu/libpcl_common.so  \n'}
+[2.122330] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_KDTREE\n'}
+[2.122915] (skel_extract) StdoutLine: {'line': b'-- Found PCL_KDTREE: /usr/lib/x86_64-linux-gnu/libpcl_kdtree.so  \n'}
+[2.123080] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_OCTREE\n'}
+[2.123637] (skel_extract) StdoutLine: {'line': b'-- Found PCL_OCTREE: /usr/lib/x86_64-linux-gnu/libpcl_octree.so  \n'}
+[2.123796] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_SEARCH\n'}
+[2.124333] (skel_extract) StdoutLine: {'line': b'-- Found PCL_SEARCH: /usr/lib/x86_64-linux-gnu/libpcl_search.so  \n'}
+[2.124419] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_SAMPLE_CONSENSUS\n'}
+[2.125063] (skel_extract) StdoutLine: {'line': b'-- Found PCL_SAMPLE_CONSENSUS: /usr/lib/x86_64-linux-gnu/libpcl_sample_consensus.so  \n'}
+[2.125196] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_FILTERS\n'}
+[2.125795] (skel_extract) StdoutLine: {'line': b'-- Found PCL_FILTERS: /usr/lib/x86_64-linux-gnu/libpcl_filters.so  \n'}
+[2.125943] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_2D\n'}
+[2.126099] (skel_extract) StdoutLine: {'line': b'-- Found PCL_2D: /usr/include/pcl-1.12  \n'}
+[2.126202] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_GEOMETRY\n'}
+[2.126371] (skel_extract) StdoutLine: {'line': b'-- Found PCL_GEOMETRY: /usr/include/pcl-1.12  \n'}
+[2.126443] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_IO\n'}
+[2.127029] (skel_extract) StdoutLine: {'line': b'-- Found PCL_IO: /usr/lib/x86_64-linux-gnu/libpcl_io.so  \n'}
+[2.127238] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_FEATURES\n'}
+[2.128253] (skel_extract) StdoutLine: {'line': b'-- Found PCL_FEATURES: /usr/lib/x86_64-linux-gnu/libpcl_features.so  \n'}
+[2.128428] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_ML\n'}
+[2.129434] (skel_extract) StdoutLine: {'line': b'-- Found PCL_ML: /usr/lib/x86_64-linux-gnu/libpcl_ml.so  \n'}
+[2.129531] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_SEGMENTATION\n'}
+[2.130156] (skel_extract) StdoutLine: {'line': b'-- Found PCL_SEGMENTATION: /usr/lib/x86_64-linux-gnu/libpcl_segmentation.so  \n'}
+[2.130348] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_VISUALIZATION\n'}
+[2.131020] (skel_extract) StdoutLine: {'line': b'-- Found PCL_VISUALIZATION: /usr/lib/x86_64-linux-gnu/libpcl_visualization.so  \n'}
+[2.131211] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_SURFACE\n'}
+[2.132033] (skel_extract) StdoutLine: {'line': b'-- Found PCL_SURFACE: /usr/lib/x86_64-linux-gnu/libpcl_surface.so  \n'}
+[2.132191] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_REGISTRATION\n'}
+[2.133061] (skel_extract) StdoutLine: {'line': b'-- Found PCL_REGISTRATION: /usr/lib/x86_64-linux-gnu/libpcl_registration.so  \n'}
+[2.133244] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_KEYPOINTS\n'}
+[2.133875] (skel_extract) StdoutLine: {'line': b'-- Found PCL_KEYPOINTS: /usr/lib/x86_64-linux-gnu/libpcl_keypoints.so  \n'}
+[2.134040] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_TRACKING\n'}
+[2.134688] (skel_extract) StdoutLine: {'line': b'-- Found PCL_TRACKING: /usr/lib/x86_64-linux-gnu/libpcl_tracking.so  \n'}
+[2.134837] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_RECOGNITION\n'}
+[2.135461] (skel_extract) StdoutLine: {'line': b'-- Found PCL_RECOGNITION: /usr/lib/x86_64-linux-gnu/libpcl_recognition.so  \n'}
+[2.135726] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_STEREO\n'}
+[2.136357] (skel_extract) StdoutLine: {'line': b'-- Found PCL_STEREO: /usr/lib/x86_64-linux-gnu/libpcl_stereo.so  \n'}
+[2.136506] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_APPS\n'}
+[2.137098] (skel_extract) StdoutLine: {'line': b'-- Found PCL_APPS: /usr/lib/x86_64-linux-gnu/libpcl_apps.so  \n'}
+[2.137638] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_IN_HAND_SCANNER\n'}
+[2.137802] (skel_extract) StdoutLine: {'line': b'-- Found PCL_IN_HAND_SCANNER: /usr/include/pcl-1.12  \n'}
+[2.137934] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_MODELER\n'}
+[2.138115] (skel_extract) StdoutLine: {'line': b'-- Found PCL_MODELER: /usr/include/pcl-1.12  \n'}
+[2.138264] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_POINT_CLOUD_EDITOR\n'}
+[2.138360] (skel_extract) StdoutLine: {'line': b'-- Found PCL_POINT_CLOUD_EDITOR: /usr/include/pcl-1.12  \n'}
+[2.138429] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_OUTOFCORE\n'}
+[2.139028] (skel_extract) StdoutLine: {'line': b'-- Found PCL_OUTOFCORE: /usr/lib/x86_64-linux-gnu/libpcl_outofcore.so  \n'}
+[2.139228] (skel_extract) StdoutLine: {'line': b'-- looking for PCL_PEOPLE\n'}
+[2.139873] (skel_extract) StdoutLine: {'line': b'-- Found PCL_PEOPLE: /usr/lib/x86_64-linux-gnu/libpcl_people.so  \n'}
+[2.140459] (skel_extract) StdoutLine: {'line': b'-- Found PCL: pcl_common;pcl_kdtree;pcl_octree;pcl_search;pcl_sample_consensus;pcl_filters;pcl_io;pcl_features;pcl_ml;pcl_segmentation;pcl_visualization;pcl_surface;pcl_registration;pcl_keypoints;pcl_tracking;pcl_recognition;pcl_stereo;pcl_apps;pcl_outofcore;pcl_people;Boost::system;Boost::filesystem;Boost::date_time;Boost::iostreams;Boost::serialization;/usr/lib/libOpenNI.so;libusb::libusb;/usr/lib/x86_64-linux-gnu/libOpenNI2.so;libusb::libusb;VTK::ChartsCore;VTK::CommonColor;VTK::CommonComputationalGeometry;VTK::CommonCore;VTK::CommonDataModel;VTK::CommonExecutionModel;VTK::CommonMath;VTK::CommonMisc;VTK::CommonTransforms;VTK::FiltersCore;VTK::FiltersExtraction;VTK::FiltersGeneral;VTK::FiltersGeometry;VTK::FiltersModeling;VTK::FiltersSources;VTK::ImagingCore;VTK::ImagingSources;VTK::InteractionImage;VTK::InteractionStyle;VTK::InteractionWidgets;VTK::IOCore;VTK::IOGeometry;VTK::IOImage;VTK::IOLegacy;VTK::IOPLY;VTK::RenderingAnnotation;VTK::RenderingCore;VTK::RenderingContext2D;VTK::RenderingLOD;VTK::RenderingFreeType;VTK::ViewsCore;VTK::ViewsContext2D;VTK::RenderingOpenGL2;VTK::GUISupportQt;FLANN::FLANN;QHULL::QHULL (Required is at least version "1.12") \n'}
+[2.142076] (skel_extract) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.12 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[2.202763] (-) TimerEvent: {}
+[2.207866] (skel_extract) StdoutLine: {'line': b'-- Configuring done\n'}
+[2.224464] (skel_extract) StdoutLine: {'line': b'-- Generating done\n'}
+[2.230690] (skel_extract) StdoutLine: {'line': b'-- Build files have been written to: /home/airlab/OSEP/build/skel_extract\n'}
+[2.242345] (skel_extract) CommandEnded: {'returncode': 0}
+[2.242962] (skel_extract) JobProgress: {'identifier': 'skel_extract', 'progress': 'build'}
+[2.244342] (skel_extract) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/airlab/OSEP/build/skel_extract', '--', '-j8', '-l8'], 'cwd': '/home/airlab/OSEP/build/skel_extract', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('CARB_APP_PATH', '/home/airlab/isaacsim/kit'), ('LANGUAGE', 'en_US:en'), ('USER', 'airlab'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/airlab'), ('CONDA_SHLVL', '0'), ('ISAAC_PATH', '/home/airlab/isaacsim'), ('OLDPWD', '/home/airlab'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '1860'), ('SYSTEMD_EXEC_PID', '2243'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('_CE_M', ''), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator23558193cd9818af7fe4d2c2f5bd9d00f'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '2645'), ('COLCON_PREFIX_PATH', '/home/airlab/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'airlab'), ('JOURNAL_STREAM', '8:20567'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'airlab'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('_CE_CONDA', ''), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/airlab/miniconda3/condabin:/opt/ros/humble/bin:/home/airlab/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/airlab-Predator-PO3-600:@/tmp/.ICE-unix/2074,unix/airlab-Predator-PO3-600:/tmp/.ICE-unix/2074'), ('EXP_PATH', '/home/airlab/isaacsim/apps'), ('INVOCATION_ID', '3f53238c9ec34ac388fc058596d3ea20'), ('XDG_MENU_PREFIX', 'gnome-'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'openssh'), ('SSH_AUTH_SOCK', '/run/user/1000/openssh_agent'), ('AMENT_PREFIX_PATH', '/home/airlab/OSEP/install/osep:/home/airlab/OSEP/install/skel_extract:/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/airlab/miniconda3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:7017762e-e7cb-48fc-8cba-7e90bcf81efb'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/airlab/OSEP/build/skel_extract'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/airlab/miniconda3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/airlab/isaacsim/../../..//opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/airlab/isaacsim/kit/python/lib/python3.10/site-packages:/home/airlab/isaacsim/python_packages:/home/airlab/isaacsim/exts/omni.isaac.kit:/home/airlab/isaacsim/kit/kernel/py:/home/airlab/isaacsim/kit/plugins/bindings-python:/home/airlab/isaacsim/exts/omni.isaac.lula/pip_prebundle:/home/airlab/isaacsim/exts/omni.exporter.urdf/pip_prebundle:/home/airlab/isaacsim/extscache/omni.kit.pip_archive-0.0.0+10a4b5c0.lx64.cp310/pip_prebundle:/home/airlab/isaacsim/exts/omni.isaac.core_archive/pip_prebundle:/home/airlab/isaacsim/exts/omni.isaac.ml_archive/pip_prebundle:/home/airlab/isaacsim/exts/omni.pip.compute/pip_prebundle:/home/airlab/isaacsim/exts/omni.pip.cloud/pip_prebundle'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/airlab/OSEP/install/osep:/home/airlab/OSEP/install/skel_extract:/opt/ros/humble')]), 'shell': False}
+[2.277899] (skel_extract) StdoutLine: {'line': b'[ 66%] \x1b[32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_main.cpp.o\x1b[0m\n'}
+[2.278043] (skel_extract) StdoutLine: {'line': b'[ 66%] \x1b[32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_node.cpp.o\x1b[0m\n'}
+[2.302876] (-) TimerEvent: {}
+[2.403119] (-) TimerEvent: {}
+[2.503362] (-) TimerEvent: {}
+[2.603614] (-) TimerEvent: {}
+[2.703856] (-) TimerEvent: {}
+[2.804099] (-) TimerEvent: {}
+[2.904333] (-) TimerEvent: {}
+[3.004512] (-) TimerEvent: {}
+[3.104747] (-) TimerEvent: {}
+[3.204981] (-) TimerEvent: {}
+[3.305217] (-) TimerEvent: {}
+[3.405454] (-) TimerEvent: {}
+[3.505670] (-) TimerEvent: {}
+[3.605910] (-) TimerEvent: {}
+[3.709434] (-) TimerEvent: {}
+[3.809663] (-) TimerEvent: {}
+[3.909901] (-) TimerEvent: {}
+[4.010153] (-) TimerEvent: {}
+[4.110386] (-) TimerEvent: {}
+[4.210636] (-) TimerEvent: {}
+[4.310857] (-) TimerEvent: {}
+[4.411124] (-) TimerEvent: {}
+[4.511370] (-) TimerEvent: {}
+[4.611704] (-) TimerEvent: {}
+[4.711993] (-) TimerEvent: {}
+[4.812239] (-) TimerEvent: {}
+[4.912523] (-) TimerEvent: {}
+[5.012725] (-) TimerEvent: {}
+[5.112958] (-) TimerEvent: {}
+[5.213192] (-) TimerEvent: {}
+[5.314532] (-) TimerEvent: {}
+[5.414788] (-) TimerEvent: {}
+[5.515029] (-) TimerEvent: {}
+[5.615266] (-) TimerEvent: {}
+[5.715521] (-) TimerEvent: {}
+[5.815749] (-) TimerEvent: {}
+[5.915988] (-) TimerEvent: {}
+[6.016219] (-) TimerEvent: {}
+[6.116486] (-) TimerEvent: {}
+[6.216748] (-) TimerEvent: {}
+[6.316984] (-) TimerEvent: {}
+[6.417197] (-) TimerEvent: {}
+[6.517449] (-) TimerEvent: {}
+[6.529262] (skel_extract) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable skel_extract\x1b[0m\n'}
+[6.617584] (-) TimerEvent: {}
+[6.717940] (-) TimerEvent: {}
+[6.759871] (skel_extract) StdoutLine: {'line': b'[100%] Built target skel_extract\n'}
+[6.767661] (skel_extract) CommandEnded: {'returncode': 0}
+[6.768320] (skel_extract) JobProgress: {'identifier': 'skel_extract', 'progress': 'install'}
+[6.774957] (skel_extract) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/airlab/OSEP/build/skel_extract'], 'cwd': '/home/airlab/OSEP/build/skel_extract', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('CARB_APP_PATH', '/home/airlab/isaacsim/kit'), ('LANGUAGE', 'en_US:en'), ('USER', 'airlab'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/airlab'), ('CONDA_SHLVL', '0'), ('ISAAC_PATH', '/home/airlab/isaacsim'), ('OLDPWD', '/home/airlab'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '1860'), ('SYSTEMD_EXEC_PID', '2243'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('_CE_M', ''), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator23558193cd9818af7fe4d2c2f5bd9d00f'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '2645'), ('COLCON_PREFIX_PATH', '/home/airlab/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'airlab'), ('JOURNAL_STREAM', '8:20567'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'airlab'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('_CE_CONDA', ''), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/airlab/miniconda3/condabin:/opt/ros/humble/bin:/home/airlab/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/airlab-Predator-PO3-600:@/tmp/.ICE-unix/2074,unix/airlab-Predator-PO3-600:/tmp/.ICE-unix/2074'), ('EXP_PATH', '/home/airlab/isaacsim/apps'), ('INVOCATION_ID', '3f53238c9ec34ac388fc058596d3ea20'), ('XDG_MENU_PREFIX', 'gnome-'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AGENT_LAUNCHER', 'openssh'), ('SSH_AUTH_SOCK', '/run/user/1000/openssh_agent'), ('AMENT_PREFIX_PATH', '/home/airlab/OSEP/install/osep:/home/airlab/OSEP/install/skel_extract:/opt/ros/humble'), ('CONDA_PYTHON_EXE', '/home/airlab/miniconda3/bin/python'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:7017762e-e7cb-48fc-8cba-7e90bcf81efb'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/airlab/OSEP/build/skel_extract'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('CONDA_EXE', '/home/airlab/miniconda3/bin/conda'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/airlab/isaacsim/../../..//opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/airlab/isaacsim/kit/python/lib/python3.10/site-packages:/home/airlab/isaacsim/python_packages:/home/airlab/isaacsim/exts/omni.isaac.kit:/home/airlab/isaacsim/kit/kernel/py:/home/airlab/isaacsim/kit/plugins/bindings-python:/home/airlab/isaacsim/exts/omni.isaac.lula/pip_prebundle:/home/airlab/isaacsim/exts/omni.exporter.urdf/pip_prebundle:/home/airlab/isaacsim/extscache/omni.kit.pip_archive-0.0.0+10a4b5c0.lx64.cp310/pip_prebundle:/home/airlab/isaacsim/exts/omni.isaac.core_archive/pip_prebundle:/home/airlab/isaacsim/exts/omni.isaac.ml_archive/pip_prebundle:/home/airlab/isaacsim/exts/omni.pip.compute/pip_prebundle:/home/airlab/isaacsim/exts/omni.pip.cloud/pip_prebundle'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/airlab/OSEP/install/osep:/home/airlab/OSEP/install/skel_extract:/opt/ros/humble')]), 'shell': False}
+[6.779811] (skel_extract) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[6.779985] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/lib/skel_extract/skel_extract\n'}
+[6.780221] (skel_extract) StdoutLine: {'line': b'-- Set runtime path of "/home/airlab/OSEP/install/skel_extract/lib/skel_extract/skel_extract" to ""\n'}
+[6.780342] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/ament_index/resource_index/package_run_dependencies/skel_extract\n'}
+[6.780419] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/ament_index/resource_index/parent_prefix_path/skel_extract\n'}
+[6.780576] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.sh\n'}
+[6.780714] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.dsv\n'}
+[6.780789] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/path.sh\n'}
+[6.780869] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/environment/path.dsv\n'}
+[6.780918] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.bash\n'}
+[6.780966] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.sh\n'}
+[6.781025] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.zsh\n'}
+[6.781082] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/local_setup.dsv\n'}
+[6.781144] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/package.dsv\n'}
+[6.781208] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/ament_index/resource_index/packages/skel_extract\n'}
+[6.781303] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig.cmake\n'}
+[6.781365] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig-version.cmake\n'}
+[6.781458] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/airlab/OSEP/install/skel_extract/share/skel_extract/package.xml\n'}
+[6.783028] (skel_extract) CommandEnded: {'returncode': 0}
+[6.795287] (skel_extract) JobEnded: {'identifier': 'skel_extract', 'rc': 0}
+[6.795699] (-) EventReactorShutdown: {}

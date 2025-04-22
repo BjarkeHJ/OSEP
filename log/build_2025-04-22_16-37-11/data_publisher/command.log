@@ -1,0 +1,2 @@
+Invoking command in '/home/airlab/OSEP/build/data_publisher': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/data_publisher -- -j8 -l8
+Invoked command in '/home/airlab/OSEP/build/data_publisher' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/data_publisher -- -j8 -l8

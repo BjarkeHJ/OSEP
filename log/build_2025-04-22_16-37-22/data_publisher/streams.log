@@ -1,0 +1,26 @@
+[0.011s] Invoking command in '/home/airlab/OSEP/build/data_publisher': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/data_publisher -- -j8 -l8
+[0.044s] [35m[1mConsolidate compiler generated dependencies of target data_publisher[0m
+[0.062s] [ 50%] [32mBuilding CXX object CMakeFiles/data_publisher.dir/src/pub_node.cpp.o[0m
+[5.773s] [100%] [32m[1mLinking CXX executable data_publisher[0m
+[6.162s] [100%] Built target data_publisher
+[6.170s] Invoked command in '/home/airlab/OSEP/build/data_publisher' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/airlab/OSEP/build/data_publisher -- -j8 -l8
+[6.172s] Invoking command in '/home/airlab/OSEP/build/data_publisher': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/airlab/OSEP/build/data_publisher
+[6.177s] -- Install configuration: ""
+[6.177s] -- Installing: /home/airlab/OSEP/install/data_publisher/lib/data_publisher/data_publisher
+[6.178s] -- Set runtime path of "/home/airlab/OSEP/install/data_publisher/lib/data_publisher/data_publisher" to ""
+[6.178s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/ament_index/resource_index/package_run_dependencies/data_publisher
+[6.178s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/ament_index/resource_index/parent_prefix_path/data_publisher
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/environment/ament_prefix_path.sh
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/environment/ament_prefix_path.dsv
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/environment/path.sh
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/environment/path.dsv
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/local_setup.bash
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/local_setup.sh
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/local_setup.zsh
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/local_setup.dsv
+[6.179s] -- Installing: /home/airlab/OSEP/install/data_publisher/share/data_publisher/package.dsv
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/ament_index/resource_index/packages/data_publisher
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/cmake/data_publisherConfig.cmake
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/cmake/data_publisherConfig-version.cmake
+[6.179s] -- Up-to-date: /home/airlab/OSEP/install/data_publisher/share/data_publisher/package.xml
+[6.180s] Invoked command in '/home/airlab/OSEP/build/data_publisher' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/airlab/OSEP/build/data_publisher

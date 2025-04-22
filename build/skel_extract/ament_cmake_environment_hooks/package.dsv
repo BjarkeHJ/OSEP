@@ -1,0 +1,4 @@
+source;share/skel_extract/local_setup.bash
+source;share/skel_extract/local_setup.dsv
+source;share/skel_extract/local_setup.sh
+source;share/skel_extract/local_setup.zsh
