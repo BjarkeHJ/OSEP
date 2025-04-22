@@ -1,0 +1,23 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# ROS2 launch logs
+launch/*.pyc
+
+# VS Code Settings
+.vscode/
+
+# Python Cache Files
+__pycache__/
+*.pyc
+*.pyo
+
+# Colcon Metadata
+.colcon/
+
+# Any temporary files
+*.swp
+*.swo
+*~
