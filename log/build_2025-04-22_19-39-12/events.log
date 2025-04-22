@@ -1,0 +1,178 @@
+[0.000000] (-) TimerEvent: {}
+[0.003757] (data_publisher) JobQueued: {'identifier': 'data_publisher', 'dependencies': OrderedDict()}
+[0.003993] (skel_extract) JobQueued: {'identifier': 'skel_extract', 'dependencies': OrderedDict()}
+[0.004062] (data_publisher) JobStarted: {'identifier': 'data_publisher'}
+[0.012406] (skel_extract) JobStarted: {'identifier': 'skel_extract'}
+[0.018588] (data_publisher) JobProgress: {'identifier': 'data_publisher', 'progress': 'cmake'}
+[0.019907] (data_publisher) JobProgress: {'identifier': 'data_publisher', 'progress': 'build'}
+[0.021132] (data_publisher) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/bhj/OSEP/build/data_publisher', '--', '-j12', '-l12'], 'cwd': '/home/bhj/OSEP/build/data_publisher', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_US:en'), ('USER', 'bhj'), ('XDG_SEAT', 'seat0'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/bhj'), ('OLDPWD', '/home/bhj'), ('DESKTOP_SESSION', 'cinnamon2d'), ('ROS_PYTHON_VERSION', '3'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1835'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator21a9d5db22c73a993ff0b42f64b396873'), ('COLCON_PREFIX_PATH', '/home/bhj/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'bhj'), ('DESKTOP_AUTOSTART_ID', '10913d2776eab78459174532995516465600000019660037'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'bhj'), ('TERM', 'xterm-256color'), ('GTK_OVERLAY_SCROLLING', '0'), ('XDG_SESSION_ID', '2'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/humble/bin:/usr/local/texlive/2025/bin/x86_64-linux:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/bhj-XPS-15-9500:@/tmp/.ICE-unix/1966,unix/bhj-XPS-15-9500:/tmp/.ICE-unix/1966'), ('GTK3_MODULES', 'xapp-gtk3-module'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'X-Cinnamon'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'cinnamon2d'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:efa4be27-65c5-4311-ba76-2d8765dbed5e'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'cinnamon2d'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('XDG_VTNR', '2'), ('PWD', '/home/bhj/OSEP/build/data_publisher'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-cinnamon2d:/etc/xdg'), ('PICO_SDK_PATH', '/home/bhj/pico-sdk/'), ('CLUTTER_IM_MODULE', 'ibus'), ('XDG_DATA_DIRS', '/usr/share/gnome:/usr/share/cinnamon2d:/usr/share/gnome:/home/bhj/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble')]), 'shell': False}
+[0.026407] (skel_extract) JobProgress: {'identifier': 'skel_extract', 'progress': 'cmake'}
+[0.027769] (skel_extract) JobProgress: {'identifier': 'skel_extract', 'progress': 'build'}
+[0.028276] (skel_extract) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/bhj/OSEP/build/skel_extract', '--', '-j12', '-l12'], 'cwd': '/home/bhj/OSEP/build/skel_extract', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_US:en'), ('USER', 'bhj'), ('XDG_SEAT', 'seat0'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/bhj'), ('OLDPWD', '/home/bhj'), ('DESKTOP_SESSION', 'cinnamon2d'), ('ROS_PYTHON_VERSION', '3'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1835'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator21a9d5db22c73a993ff0b42f64b396873'), ('COLCON_PREFIX_PATH', '/home/bhj/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'bhj'), ('DESKTOP_AUTOSTART_ID', '10913d2776eab78459174532995516465600000019660037'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'bhj'), ('TERM', 'xterm-256color'), ('GTK_OVERLAY_SCROLLING', '0'), ('XDG_SESSION_ID', '2'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/humble/bin:/usr/local/texlive/2025/bin/x86_64-linux:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/bhj-XPS-15-9500:@/tmp/.ICE-unix/1966,unix/bhj-XPS-15-9500:/tmp/.ICE-unix/1966'), ('GTK3_MODULES', 'xapp-gtk3-module'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'X-Cinnamon'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'cinnamon2d'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:efa4be27-65c5-4311-ba76-2d8765dbed5e'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'cinnamon2d'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('XDG_VTNR', '2'), ('PWD', '/home/bhj/OSEP/build/skel_extract'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-cinnamon2d:/etc/xdg'), ('PICO_SDK_PATH', '/home/bhj/pico-sdk/'), ('CLUTTER_IM_MODULE', 'ibus'), ('XDG_DATA_DIRS', '/usr/share/gnome:/usr/share/cinnamon2d:/usr/share/gnome:/home/bhj/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble')]), 'shell': False}
+[0.085364] (data_publisher) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target data_publisher\x1b[0m\n'}
+[0.097012] (skel_extract) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target skel_extract\x1b[0m\n'}
+[0.099885] (-) TimerEvent: {}
+[0.122649] (data_publisher) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/data_publisher.dir/src/pub_node.cpp.o\x1b[0m\n'}
+[0.148149] (skel_extract) StdoutLine: {'line': b'[100%] Built target skel_extract\n'}
+[0.161769] (skel_extract) CommandEnded: {'returncode': 0}
+[0.162681] (skel_extract) JobProgress: {'identifier': 'skel_extract', 'progress': 'install'}
+[0.177907] (skel_extract) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/bhj/OSEP/build/skel_extract'], 'cwd': '/home/bhj/OSEP/build/skel_extract', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_US:en'), ('USER', 'bhj'), ('XDG_SEAT', 'seat0'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/bhj'), ('OLDPWD', '/home/bhj'), ('DESKTOP_SESSION', 'cinnamon2d'), ('ROS_PYTHON_VERSION', '3'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1835'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator21a9d5db22c73a993ff0b42f64b396873'), ('COLCON_PREFIX_PATH', '/home/bhj/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'bhj'), ('DESKTOP_AUTOSTART_ID', '10913d2776eab78459174532995516465600000019660037'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'bhj'), ('TERM', 'xterm-256color'), ('GTK_OVERLAY_SCROLLING', '0'), ('XDG_SESSION_ID', '2'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/humble/bin:/usr/local/texlive/2025/bin/x86_64-linux:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/bhj-XPS-15-9500:@/tmp/.ICE-unix/1966,unix/bhj-XPS-15-9500:/tmp/.ICE-unix/1966'), ('GTK3_MODULES', 'xapp-gtk3-module'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'X-Cinnamon'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'cinnamon2d'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:efa4be27-65c5-4311-ba76-2d8765dbed5e'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'cinnamon2d'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('XDG_VTNR', '2'), ('PWD', '/home/bhj/OSEP/build/skel_extract'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-cinnamon2d:/etc/xdg'), ('PICO_SDK_PATH', '/home/bhj/pico-sdk/'), ('CLUTTER_IM_MODULE', 'ibus'), ('XDG_DATA_DIRS', '/usr/share/gnome:/usr/share/cinnamon2d:/usr/share/gnome:/home/bhj/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble')]), 'shell': False}
+[0.189666] (skel_extract) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[0.190055] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/lib/skel_extract/skel_extract\n'}
+[0.190406] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/ament_index/resource_index/package_run_dependencies/skel_extract\n'}
+[0.191096] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/ament_index/resource_index/parent_prefix_path/skel_extract\n'}
+[0.191207] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.sh\n'}
+[0.191364] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.dsv\n'}
+[0.191455] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/path.sh\n'}
+[0.191553] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/path.dsv\n'}
+[0.191637] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.bash\n'}
+[0.191732] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.sh\n'}
+[0.191816] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.zsh\n'}
+[0.191898] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.dsv\n'}
+[0.191977] (skel_extract) StdoutLine: {'line': b'-- Installing: /home/bhj/OSEP/install/skel_extract/share/skel_extract/package.dsv\n'}
+[0.193522] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/ament_index/resource_index/packages/skel_extract\n'}
+[0.193638] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig.cmake\n'}
+[0.193735] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig-version.cmake\n'}
+[0.193820] (skel_extract) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/package.xml\n'}
+[0.203866] (skel_extract) CommandEnded: {'returncode': 0}
+[0.204409] (-) TimerEvent: {}
+[0.229025] (skel_extract) JobEnded: {'identifier': 'skel_extract', 'rc': 0}
+[0.304531] (-) TimerEvent: {}
+[0.407872] (-) TimerEvent: {}
+[0.508317] (-) TimerEvent: {}
+[0.608990] (-) TimerEvent: {}
+[0.709580] (-) TimerEvent: {}
+[0.810152] (-) TimerEvent: {}
+[0.910702] (-) TimerEvent: {}
+[1.012296] (-) TimerEvent: {}
+[1.112631] (-) TimerEvent: {}
+[1.213106] (-) TimerEvent: {}
+[1.313696] (-) TimerEvent: {}
+[1.414729] (-) TimerEvent: {}
+[1.515035] (-) TimerEvent: {}
+[1.615358] (-) TimerEvent: {}
+[1.715798] (-) TimerEvent: {}
+[1.816268] (-) TimerEvent: {}
+[1.916608] (-) TimerEvent: {}
+[2.017007] (-) TimerEvent: {}
+[2.117267] (-) TimerEvent: {}
+[2.217975] (-) TimerEvent: {}
+[2.318238] (-) TimerEvent: {}
+[2.421962] (-) TimerEvent: {}
+[2.522270] (-) TimerEvent: {}
+[2.622534] (-) TimerEvent: {}
+[2.726158] (-) TimerEvent: {}
+[2.827699] (-) TimerEvent: {}
+[2.928362] (-) TimerEvent: {}
+[3.029519] (-) TimerEvent: {}
+[3.129930] (-) TimerEvent: {}
+[3.230533] (-) TimerEvent: {}
+[3.332645] (-) TimerEvent: {}
+[3.433234] (-) TimerEvent: {}
+[3.533574] (-) TimerEvent: {}
+[3.636841] (-) TimerEvent: {}
+[3.737140] (-) TimerEvent: {}
+[3.837467] (-) TimerEvent: {}
+[3.937890] (-) TimerEvent: {}
+[4.038516] (-) TimerEvent: {}
+[4.139762] (-) TimerEvent: {}
+[4.240397] (-) TimerEvent: {}
+[4.340921] (-) TimerEvent: {}
+[4.441253] (-) TimerEvent: {}
+[4.541729] (-) TimerEvent: {}
+[4.642017] (-) TimerEvent: {}
+[4.742438] (-) TimerEvent: {}
+[4.843476] (-) TimerEvent: {}
+[4.946731] (-) TimerEvent: {}
+[5.047193] (-) TimerEvent: {}
+[5.147743] (-) TimerEvent: {}
+[5.248958] (-) TimerEvent: {}
+[5.349353] (-) TimerEvent: {}
+[5.449837] (-) TimerEvent: {}
+[5.550103] (-) TimerEvent: {}
+[5.652994] (-) TimerEvent: {}
+[5.753284] (-) TimerEvent: {}
+[5.856856] (-) TimerEvent: {}
+[5.957158] (-) TimerEvent: {}
+[6.060729] (-) TimerEvent: {}
+[6.161046] (-) TimerEvent: {}
+[6.261601] (-) TimerEvent: {}
+[6.362071] (-) TimerEvent: {}
+[6.462519] (-) TimerEvent: {}
+[6.565971] (-) TimerEvent: {}
+[6.666300] (-) TimerEvent: {}
+[6.766854] (-) TimerEvent: {}
+[6.867151] (-) TimerEvent: {}
+[6.967486] (-) TimerEvent: {}
+[7.067836] (-) TimerEvent: {}
+[7.168749] (-) TimerEvent: {}
+[7.269123] (-) TimerEvent: {}
+[7.369620] (-) TimerEvent: {}
+[7.469999] (-) TimerEvent: {}
+[7.570289] (-) TimerEvent: {}
+[7.672730] (-) TimerEvent: {}
+[7.773036] (-) TimerEvent: {}
+[7.873358] (-) TimerEvent: {}
+[7.974048] (-) TimerEvent: {}
+[8.074526] (-) TimerEvent: {}
+[8.174837] (-) TimerEvent: {}
+[8.275110] (-) TimerEvent: {}
+[8.375361] (-) TimerEvent: {}
+[8.475611] (-) TimerEvent: {}
+[8.575908] (-) TimerEvent: {}
+[8.676218] (-) TimerEvent: {}
+[8.779729] (-) TimerEvent: {}
+[8.880045] (-) TimerEvent: {}
+[8.980344] (-) TimerEvent: {}
+[9.080643] (-) TimerEvent: {}
+[9.180906] (-) TimerEvent: {}
+[9.281240] (-) TimerEvent: {}
+[9.381934] (-) TimerEvent: {}
+[9.483216] (-) TimerEvent: {}
+[9.584061] (-) TimerEvent: {}
+[9.684465] (-) TimerEvent: {}
+[9.784933] (-) TimerEvent: {}
+[9.885322] (-) TimerEvent: {}
+[9.986008] (-) TimerEvent: {}
+[10.086479] (-) TimerEvent: {}
+[10.188756] (-) TimerEvent: {}
+[10.289162] (-) TimerEvent: {}
+[10.392295] (-) TimerEvent: {}
+[10.492624] (-) TimerEvent: {}
+[10.592918] (-) TimerEvent: {}
+[10.693299] (-) TimerEvent: {}
+[10.754931] (data_publisher) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable data_publisher\x1b[0m\n'}
+[10.793374] (-) TimerEvent: {}
+[10.893732] (-) TimerEvent: {}
+[10.994071] (-) TimerEvent: {}
+[11.094351] (-) TimerEvent: {}
+[11.194739] (-) TimerEvent: {}
+[11.296877] (-) TimerEvent: {}
+[11.397336] (-) TimerEvent: {}
+[11.497896] (-) TimerEvent: {}
+[11.560133] (data_publisher) StdoutLine: {'line': b'[100%] Built target data_publisher\n'}
+[11.573391] (data_publisher) CommandEnded: {'returncode': 0}
+[11.574079] (data_publisher) JobProgress: {'identifier': 'data_publisher', 'progress': 'install'}
+[11.574616] (data_publisher) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/bhj/OSEP/build/data_publisher'], 'cwd': '/home/bhj/OSEP/build/data_publisher', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_US:en'), ('USER', 'bhj'), ('XDG_SEAT', 'seat0'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/bhj'), ('OLDPWD', '/home/bhj'), ('DESKTOP_SESSION', 'cinnamon2d'), ('ROS_PYTHON_VERSION', '3'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1835'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator21a9d5db22c73a993ff0b42f64b396873'), ('COLCON_PREFIX_PATH', '/home/bhj/OSEP/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'bhj'), ('DESKTOP_AUTOSTART_ID', '10913d2776eab78459174532995516465600000019660037'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'bhj'), ('TERM', 'xterm-256color'), ('GTK_OVERLAY_SCROLLING', '0'), ('XDG_SESSION_ID', '2'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/humble/bin:/usr/local/texlive/2025/bin/x86_64-linux:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/bhj-XPS-15-9500:@/tmp/.ICE-unix/1966,unix/bhj-XPS-15-9500:/tmp/.ICE-unix/1966'), ('GTK3_MODULES', 'xapp-gtk3-module'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'X-Cinnamon'), ('IBUS_DISABLE_SNOOPER', '1'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'cinnamon2d'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('TERMINATOR_UUID', 'urn:uuid:efa4be27-65c5-4311-ba76-2d8765dbed5e'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'cinnamon2d'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('XDG_VTNR', '2'), ('PWD', '/home/bhj/OSEP/build/data_publisher'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-cinnamon2d:/etc/xdg'), ('PICO_SDK_PATH', '/home/bhj/pico-sdk/'), ('CLUTTER_IM_MODULE', 'ibus'), ('XDG_DATA_DIRS', '/usr/share/gnome:/usr/share/cinnamon2d:/usr/share/gnome:/home/bhj/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/bhj/OSEP/install/skel_extract:/home/bhj/OSEP/install/data_publisher:/opt/ros/humble')]), 'shell': False}
+[11.592381] (data_publisher) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[11.592665] (data_publisher) StdoutLine: {'line': b'-- Installing: /home/bhj/OSEP/install/data_publisher/lib/data_publisher/data_publisher\n'}
+[11.592810] (data_publisher) StdoutLine: {'line': b'-- Set runtime path of "/home/bhj/OSEP/install/data_publisher/lib/data_publisher/data_publisher" to ""\n'}
+[11.592920] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/ament_index/resource_index/package_run_dependencies/data_publisher\n'}
+[11.593025] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/ament_index/resource_index/parent_prefix_path/data_publisher\n'}
+[11.593128] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/environment/ament_prefix_path.sh\n'}
+[11.593234] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/environment/ament_prefix_path.dsv\n'}
+[11.593337] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/environment/path.sh\n'}
+[11.593441] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/environment/path.dsv\n'}
+[11.593539] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/local_setup.bash\n'}
+[11.593636] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/local_setup.sh\n'}
+[11.593758] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/local_setup.zsh\n'}
+[11.593858] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/local_setup.dsv\n'}
+[11.593955] (data_publisher) StdoutLine: {'line': b'-- Installing: /home/bhj/OSEP/install/data_publisher/share/data_publisher/package.dsv\n'}
+[11.594054] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/ament_index/resource_index/packages/data_publisher\n'}
+[11.594153] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/cmake/data_publisherConfig.cmake\n'}
+[11.594269] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/cmake/data_publisherConfig-version.cmake\n'}
+[11.594367] (data_publisher) StdoutLine: {'line': b'-- Up-to-date: /home/bhj/OSEP/install/data_publisher/share/data_publisher/package.xml\n'}
+[11.601750] (-) TimerEvent: {}
+[11.604975] (data_publisher) CommandEnded: {'returncode': 0}
+[11.627809] (data_publisher) JobEnded: {'identifier': 'data_publisher', 'rc': 0}
+[11.628445] (-) EventReactorShutdown: {}

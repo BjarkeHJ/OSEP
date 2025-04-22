@@ -17,6 +17,7 @@ public:
       rclcpp::shutdown();
     } else {
       RCLCPP_INFO(get_logger(), "Loaded PCD file: %s with %zu points", pcd_path.c_str(), cloud_.points.size());
+      RCLCPP_INFO(get_logger(), "Starting Publishing PointCloud at a Rate of %f Hz", publish_rate_hz_);
     }
 
     // Create publisher
@@ -33,10 +34,9 @@ private:
   void publishPointCloud() {
     sensor_msgs::msg::PointCloud2 output;
     pcl::toROSMsg(cloud_, output);
-    output.header.frame_id = "World";  // Adjust as needed
+    output.header.frame_id = "map";  // Adjust as needed
     output.header.stamp = now();
     pub_->publish(output);
-    RCLCPP_INFO(this->get_logger(), "Published PointCloud data...");
   }
 
   pcl::PointCloud<pcl::PointXYZ> cloud_;

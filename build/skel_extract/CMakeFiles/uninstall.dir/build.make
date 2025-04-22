@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/airlab/OSEP/src/skel_extract
+CMAKE_SOURCE_DIR = /home/bhj/OSEP/src/skel_extract
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/airlab/OSEP/build/skel_extract
+CMAKE_BINARY_DIR = /home/bhj/OSEP/build/skel_extract
 
 # Utility rule file for uninstall.
 
@@ -78,6 +78,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/airlab/OSEP/build/skel_extract && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/airlab/OSEP/src/skel_extract /home/airlab/OSEP/src/skel_extract /home/airlab/OSEP/build/skel_extract /home/airlab/OSEP/build/skel_extract /home/airlab/OSEP/build/skel_extract/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/bhj/OSEP/build/skel_extract && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/bhj/OSEP/src/skel_extract /home/bhj/OSEP/src/skel_extract /home/bhj/OSEP/build/skel_extract /home/bhj/OSEP/build/skel_extract /home/bhj/OSEP/build/skel_extract/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 

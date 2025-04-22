@@ -1,0 +1,26 @@
+[0.010s] Invoking command in '/home/bhj/OSEP/build/skel_extract': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/bhj/OSEP/build/skel_extract -- -j12 -l12
+[0.065s] [ 33%] [32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_node.cpp.o[0m
+[0.066s] [ 66%] [32mBuilding CXX object CMakeFiles/skel_extract.dir/src/skel_main.cpp.o[0m
+[11.160s] [100%] [32m[1mLinking CXX executable skel_extract[0m
+[11.851s] [100%] Built target skel_extract
+[11.864s] Invoked command in '/home/bhj/OSEP/build/skel_extract' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/bhj/OSEP/build/skel_extract -- -j12 -l12
+[11.865s] Invoking command in '/home/bhj/OSEP/build/skel_extract': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/bhj/OSEP/build/skel_extract
+[11.872s] -- Install configuration: ""
+[11.872s] -- Installing: /home/bhj/OSEP/install/skel_extract/lib/skel_extract/skel_extract
+[11.875s] -- Set runtime path of "/home/bhj/OSEP/install/skel_extract/lib/skel_extract/skel_extract" to ""
+[11.875s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/ament_index/resource_index/package_run_dependencies/skel_extract
+[11.875s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/ament_index/resource_index/parent_prefix_path/skel_extract
+[11.875s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.sh
+[11.875s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/ament_prefix_path.dsv
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/path.sh
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/environment/path.dsv
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.bash
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.sh
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.zsh
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/local_setup.dsv
+[11.876s] -- Installing: /home/bhj/OSEP/install/skel_extract/share/skel_extract/package.dsv
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/ament_index/resource_index/packages/skel_extract
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig.cmake
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/cmake/skel_extractConfig-version.cmake
+[11.876s] -- Up-to-date: /home/bhj/OSEP/install/skel_extract/share/skel_extract/package.xml
+[11.877s] Invoked command in '/home/bhj/OSEP/build/skel_extract' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/bhj/OSEP/build/skel_extract

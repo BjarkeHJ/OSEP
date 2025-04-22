@@ -1,7 +1,0 @@
-[01m[K/home/airlab/OSEP/src/data_publisher/src/pub_node.cpp:[m[K In member function ‘[01m[Kvoid PCDPublisher::publishPointCloud()[m[K’:
-[01m[K/home/airlab/OSEP/src/data_publisher/src/pub_node.cpp:40:3:[m[K [01;31m[Kerror: [m[Kexpected ‘[01m[K;[m[K’ before ‘[01m[K}[m[K’ token
-   40 |   [01;31m[K}[m[K
-      |   [01;31m[K^[m[K
-gmake[2]: *** [CMakeFiles/data_publisher.dir/build.make:76: CMakeFiles/data_publisher.dir/src/pub_node.cpp.o] Error 1
-gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/data_publisher.dir/all] Error 2
-gmake: *** [Makefile:146: all] Error 2

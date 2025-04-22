@@ -1,0 +1,4 @@
+Invoking command in '/home/bhj/OSEP/build/skel_extract': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/bhj/OSEP/build/skel_extract -- -j12 -l12
+Invoked command in '/home/bhj/OSEP/build/skel_extract' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/bhj/OSEP/build/skel_extract -- -j12 -l12
+Invoking command in '/home/bhj/OSEP/build/skel_extract': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/bhj/OSEP/build/skel_extract
+Invoked command in '/home/bhj/OSEP/build/skel_extract' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/bhj/OSEP/build/skel_extract
