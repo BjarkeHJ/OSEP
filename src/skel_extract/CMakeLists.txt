@@ -12,13 +12,15 @@ set(EXEC_NAME skel_extract)
 # ROS2 dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 # Dependencies list
 set(dependencies
     rclcpp
     sensor_msgs
+    visualization_msgs
     pcl_conversions)
 
 # Other libraries
@@ -27,7 +29,9 @@ find_package(PCL 1.12 REQUIRED)
 
 add_executable(${EXEC_NAME}
                 src/skel_node.cpp
-                src/skel_main.cpp)
+                src/skel_main.cpp
+                src/vis_tools.cpp
+                src/extract_tools.cpp)
 
 target_include_directories(${EXEC_NAME} PUBLIC
                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -8,7 +8,8 @@ class PCDPublisher : public rclcpp::Node {
 public:
   PCDPublisher() : Node("pcd_publisher_node"), publish_rate_hz_(1.0) {
     // Set the .pcd file path (change this accordingly)
-    std::string pcd_path = "src/data_publisher/data/01_base.pcd";
+    // std::string pcd_path = "src/data_publisher/data/08_nacelle_side.pcd";
+    std::string pcd_path = "src/data_publisher/data/09_wings_only_front.pcd";
     publish_rate_hz_ = 10;
 
     // Load the PCD file

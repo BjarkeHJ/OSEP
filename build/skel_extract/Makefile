@@ -210,6 +210,30 @@ skel_extract/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/build
 .PHONY : skel_extract/fast
 
+src/extract_tools.o: src/extract_tools.cpp.o
+.PHONY : src/extract_tools.o
+
+# target to build an object file
+src/extract_tools.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o
+.PHONY : src/extract_tools.cpp.o
+
+src/extract_tools.i: src/extract_tools.cpp.i
+.PHONY : src/extract_tools.i
+
+# target to preprocess a source file
+src/extract_tools.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/extract_tools.cpp.i
+.PHONY : src/extract_tools.cpp.i
+
+src/extract_tools.s: src/extract_tools.cpp.s
+.PHONY : src/extract_tools.s
+
+# target to generate assembly for a file
+src/extract_tools.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/extract_tools.cpp.s
+.PHONY : src/extract_tools.cpp.s
+
 src/skel_main.o: src/skel_main.cpp.o
 .PHONY : src/skel_main.o
 
@@ -258,6 +282,30 @@ src/skel_node.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/skel_node.cpp.s
 .PHONY : src/skel_node.cpp.s
 
+src/vis_tools.o: src/vis_tools.cpp.o
+.PHONY : src/vis_tools.o
+
+# target to build an object file
+src/vis_tools.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o
+.PHONY : src/vis_tools.cpp.o
+
+src/vis_tools.i: src/vis_tools.cpp.i
+.PHONY : src/vis_tools.i
+
+# target to preprocess a source file
+src/vis_tools.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/vis_tools.cpp.i
+.PHONY : src/vis_tools.cpp.i
+
+src/vis_tools.s: src/vis_tools.cpp.s
+.PHONY : src/vis_tools.s
+
+# target to generate assembly for a file
+src/vis_tools.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/skel_extract.dir/build.make CMakeFiles/skel_extract.dir/src/vis_tools.cpp.s
+.PHONY : src/vis_tools.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -274,12 +322,18 @@ help:
 	@echo "... skel_extract_uninstall"
 	@echo "... uninstall"
 	@echo "... skel_extract"
+	@echo "... src/extract_tools.o"
+	@echo "... src/extract_tools.i"
+	@echo "... src/extract_tools.s"
 	@echo "... src/skel_main.o"
 	@echo "... src/skel_main.i"
 	@echo "... src/skel_main.s"
 	@echo "... src/skel_node.o"
 	@echo "... src/skel_node.i"
 	@echo "... src/skel_node.s"
+	@echo "... src/vis_tools.o"
+	@echo "... src/vis_tools.i"
+	@echo "... src/vis_tools.s"
 .PHONY : help
 
 

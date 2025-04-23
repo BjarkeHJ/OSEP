@@ -97,23 +97,69 @@ CMakeFiles/skel_extract.dir/src/skel_main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/skel_extract.dir/src/skel_main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/bhj/OSEP/src/skel_extract/src/skel_main.cpp -o CMakeFiles/skel_extract.dir/src/skel_main.cpp.s
 
+CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o: CMakeFiles/skel_extract.dir/flags.make
+CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o: /home/bhj/OSEP/src/skel_extract/src/vis_tools.cpp
+CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o: CMakeFiles/skel_extract.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/bhj/OSEP/build/skel_extract/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o -MF CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o.d -o CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o -c /home/bhj/OSEP/src/skel_extract/src/vis_tools.cpp
+
+CMakeFiles/skel_extract.dir/src/vis_tools.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/skel_extract.dir/src/vis_tools.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/bhj/OSEP/src/skel_extract/src/vis_tools.cpp > CMakeFiles/skel_extract.dir/src/vis_tools.cpp.i
+
+CMakeFiles/skel_extract.dir/src/vis_tools.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/skel_extract.dir/src/vis_tools.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/bhj/OSEP/src/skel_extract/src/vis_tools.cpp -o CMakeFiles/skel_extract.dir/src/vis_tools.cpp.s
+
+CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o: CMakeFiles/skel_extract.dir/flags.make
+CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o: /home/bhj/OSEP/src/skel_extract/src/extract_tools.cpp
+CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o: CMakeFiles/skel_extract.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/bhj/OSEP/build/skel_extract/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o -MF CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o.d -o CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o -c /home/bhj/OSEP/src/skel_extract/src/extract_tools.cpp
+
+CMakeFiles/skel_extract.dir/src/extract_tools.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/skel_extract.dir/src/extract_tools.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/bhj/OSEP/src/skel_extract/src/extract_tools.cpp > CMakeFiles/skel_extract.dir/src/extract_tools.cpp.i
+
+CMakeFiles/skel_extract.dir/src/extract_tools.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/skel_extract.dir/src/extract_tools.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/bhj/OSEP/src/skel_extract/src/extract_tools.cpp -o CMakeFiles/skel_extract.dir/src/extract_tools.cpp.s
+
 # Object files for target skel_extract
 skel_extract_OBJECTS = \
 "CMakeFiles/skel_extract.dir/src/skel_node.cpp.o" \
-"CMakeFiles/skel_extract.dir/src/skel_main.cpp.o"
+"CMakeFiles/skel_extract.dir/src/skel_main.cpp.o" \
+"CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o" \
+"CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o"
 
 # External object files for target skel_extract
 skel_extract_EXTERNAL_OBJECTS =
 
 skel_extract: CMakeFiles/skel_extract.dir/src/skel_node.cpp.o
 skel_extract: CMakeFiles/skel_extract.dir/src/skel_main.cpp.o
+skel_extract: CMakeFiles/skel_extract.dir/src/vis_tools.cpp.o
+skel_extract: CMakeFiles/skel_extract.dir/src/extract_tools.cpp.o
 skel_extract: CMakeFiles/skel_extract.dir/build.make
 skel_extract: /usr/lib/libOpenNI.so
 skel_extract: /usr/lib/x86_64-linux-gnu/libusb-1.0.so
 skel_extract: /usr/lib/x86_64-linux-gnu/libOpenNI2.so
 skel_extract: /usr/lib/x86_64-linux-gnu/libusb-1.0.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_typesupport_fastrtps_c.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_typesupport_fastrtps_cpp.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_typesupport_introspection_c.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_typesupport_introspection_cpp.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_typesupport_cpp.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_generator_py.so
 skel_extract: /opt/ros/humble/lib/libmessage_filters.so
 skel_extract: /opt/ros/humble/lib/librclcpp.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_generator_c.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_fastrtps_c.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_introspection_c.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_c.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_fastrtps_cpp.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_introspection_cpp.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_cpp.so
+skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_generator_py.so
 skel_extract: /opt/ros/humble/lib/librosidl_typesupport_fastrtps_c.so
 skel_extract: /opt/ros/humble/lib/librmw.so
 skel_extract: /opt/ros/humble/lib/librosidl_typesupport_fastrtps_cpp.so
@@ -177,7 +223,6 @@ skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_introspec
 skel_extract: /opt/ros/humble/lib/libstd_msgs__rosidl_typesupport_introspection_cpp.so
 skel_extract: /opt/ros/humble/lib/libsensor_msgs__rosidl_typesupport_cpp.so
 skel_extract: /opt/ros/humble/lib/libsensor_msgs__rosidl_generator_py.so
-skel_extract: /opt/ros/humble/lib/libsensor_msgs__rosidl_typesupport_c.so
 skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_generator_py.so
 skel_extract: /opt/ros/humble/lib/libstd_msgs__rosidl_generator_py.so
 skel_extract: /opt/ros/humble/lib/libsensor_msgs__rosidl_typesupport_cpp.so
@@ -295,9 +340,12 @@ skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_cpp.so
 skel_extract: /opt/ros/humble/lib/libstd_msgs__rosidl_typesupport_cpp.so
 skel_extract: /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_typesupport_cpp.so
 skel_extract: /opt/ros/humble/lib/librosidl_typesupport_cpp.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_typesupport_c.so
+skel_extract: /opt/ros/humble/lib/libvisualization_msgs__rosidl_generator_c.so
 skel_extract: /usr/lib/libOpenNI.so
 skel_extract: /usr/lib/x86_64-linux-gnu/libOpenNI2.so
 skel_extract: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+skel_extract: /opt/ros/humble/lib/libsensor_msgs__rosidl_typesupport_c.so
 skel_extract: /opt/ros/humble/lib/libpcl_msgs__rosidl_generator_c.so
 skel_extract: /opt/ros/humble/lib/libsensor_msgs__rosidl_generator_c.so
 skel_extract: /opt/ros/humble/lib/libgeometry_msgs__rosidl_typesupport_c.so
@@ -311,7 +359,7 @@ skel_extract: /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so
 skel_extract: /opt/ros/humble/lib/librosidl_runtime_c.so
 skel_extract: /opt/ros/humble/lib/librcutils.so
 skel_extract: CMakeFiles/skel_extract.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/bhj/OSEP/build/skel_extract/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable skel_extract"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/bhj/OSEP/build/skel_extract/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable skel_extract"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/skel_extract.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

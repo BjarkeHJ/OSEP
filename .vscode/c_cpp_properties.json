@@ -12,7 +12,8 @@
                 "${workspaceFolder}/src/skel_extract/include",
                 "/opt/ros/humble/include/rclcpp",
                 "/opt/ros/humble/include/rcl",
-                "/opt/ros/humble/include/ament_index_cpp"
+                "/opt/ros/humble/include/ament_index_cpp",
+                "/opt/ros/humble/include/rcutils"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
