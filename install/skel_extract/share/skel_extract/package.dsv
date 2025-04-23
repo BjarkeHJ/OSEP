@@ -1,8 +1,0 @@
-source;share/skel_extract/hook/cmake_prefix_path.ps1
-source;share/skel_extract/hook/cmake_prefix_path.dsv
-source;share/skel_extract/hook/cmake_prefix_path.sh
-source;share/skel_extract/local_setup.bash
-source;share/skel_extract/local_setup.dsv
-source;share/skel_extract/local_setup.ps1
-source;share/skel_extract/local_setup.sh
-source;share/skel_extract/local_setup.zsh
