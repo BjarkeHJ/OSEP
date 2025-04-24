@@ -14,7 +14,7 @@ Simple republisher to keep format...
 class LidarPublisher : public rclcpp::Node {
 public:
     LidarPublisher() : Node("lidar_publisher_node") {
-        pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/pointcloud_data", 10);
+        pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/lidar_scan", 10);
         sub_ = create_subscription<sensor_msgs::msg::PointCloud2>("/pointcloud", 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
     }
 

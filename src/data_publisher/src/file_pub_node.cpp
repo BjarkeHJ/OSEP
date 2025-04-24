@@ -25,7 +25,7 @@ public:
     }
 
     // Create publisher
-    pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/pointcloud_data", 1);
+    pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/lidar_scan", 1);
 
     // Create timer to publish periodically
     timer_ = create_wall_timer(

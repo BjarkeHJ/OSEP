@@ -14,7 +14,7 @@ SkelEx::SkelEx(rclcpp::Node::SharedPtr node) : node_(node)
 }
 
 void SkelEx::init() {
-    RCLCPP_INFO(node_->get_logger(), "Initializing Module: Online Skeleton Extraction Planner");
+    RCLCPP_INFO(node_->get_logger(), "Initializing Module: Local Skeleton Extractor");
     /* Params */
     // Stuff from launch file (Todo)...
 
@@ -29,30 +29,21 @@ void SkelEx::init() {
 }
 
 void SkelEx::main() {
-    
     auto t_start = std::chrono::high_resolution_clock::now();
-
     distance_filter();
     pcd_size_ = SS.pts_->points.size();
     RCLCPP_INFO(node_->get_logger(), "Point Cloud Size: %d", pcd_size_);
     normal_estimation();
     RCLCPP_INFO(node_->get_logger(), "Downsampled Point Cloud Size: %d", pcd_size_);
-
     similarity_neighbor_extraction();
-    
     drosa();
-
     dcrosa();
-
     vertex_sampling();
-
     vertex_recenter();
-    
     vertex_smooth();
-
     get_vertices();
 
-    visualizer(); // For publishing at the end of each iteration...
+    // visualizer(); // For publishing at the end of each iteration...
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> t_elapsed = t_end - t_start;
     RCLCPP_INFO(node_->get_logger(), "Time Elapsed: %f seconds", t_elapsed.count());

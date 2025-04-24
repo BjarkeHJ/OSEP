@@ -1,7 +1,0 @@
-/* 
-
-Main Path Skeleton Guided Viewpoint Generation and Path Planning
-
-This file contains the incremental point cloud incrementation
-
-*/
