@@ -8,8 +8,8 @@ class PCDPublisher : public rclcpp::Node {
 public:
   PCDPublisher() : Node("pcd_publisher_node"), publish_rate_hz_(1.0) {
     // Set the .pcd file path (change this accordingly)
-    // std::string pcd_path = "src/data_publisher/data/05_horizontal_wing_side.pcd";
-    std::string pcd_path = "src/data_publisher/data/06_horizontal_wing_side_behind.pcd";
+    std::string pcd_path = "src/data_publisher/data/05_horizontal_wing_side.pcd";
+    // std::string pcd_path = "src/data_publisher/data/06_horizontal_wing_side_behind.pcd";
     // std::string pcd_path = "src/data_publisher/data/07_vertical_wing_side_behind.pcd";
     // std::string pcd_path = "src/data_publisher/data/08_nacelle_side.pcd";
     // std::string pcd_path = "src/data_publisher/data/09_wings_only_front.pcd";
@@ -25,7 +25,7 @@ public:
     }
 
     // Create publisher
-    pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/pointcloud_data", 10);
+    pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/pointcloud_data", 1);
 
     // Create timer to publish periodically
     timer_ = create_wall_timer(

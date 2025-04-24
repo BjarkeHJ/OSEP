@@ -24,6 +24,7 @@ void SkelEx::init() {
     /* Data */
     SS.pts_.reset(new pcl::PointCloud<pcl::PointXYZ>);
     SS.normals_.reset(new pcl::PointCloud<pcl::Normal>);
+    SS.vertices_.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pset_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
 }
 
@@ -31,6 +32,7 @@ void SkelEx::main() {
     
     auto t_start = std::chrono::high_resolution_clock::now();
 
+    distance_filter();
     pcd_size_ = SS.pts_->points.size();
     RCLCPP_INFO(node_->get_logger(), "Point Cloud Size: %d", pcd_size_);
     normal_estimation();
@@ -47,6 +49,8 @@ void SkelEx::main() {
     vertex_recenter();
     
     vertex_smooth();
+
+    get_vertices();
 
     visualizer(); // For publishing at the end of each iteration...
     auto t_end = std::chrono::high_resolution_clock::now();
@@ -78,12 +82,27 @@ void SkelEx::visualizer() {
     // }
     // vis->publish_cloud_debug(out_cloud, frame_id);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    for (int i=0; i<(int)SS.skelver.rows(); ++i) {
-        pcl::PointXYZ pt(SS.skelver(i,0), SS.skelver(i,1), SS.skelver(i,2));
-        out_cloud->points.push_back(pt);
-    }
-    vis->publish_cloud_debug(out_cloud, frame_id);
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    // for (int i=0; i<(int)SS.skelver.rows(); ++i) {
+    //     pcl::PointXYZ pt(SS.skelver(i,0), SS.skelver(i,1), SS.skelver(i,2));
+    //     out_cloud->points.push_back(pt);
+    // }
+    // vis->publish_cloud_debug(out_cloud, frame_id);
+}
+
+void SkelEx::distance_filter() {
+    /* Distance Filtering */
+    pcl::PassThrough<pcl::PointXYZ> ptf;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    ptf.setInputCloud(SS.pts_);
+    ptf.setFilterFieldName("x");
+    ptf.setFilterLimits(-pts_dist_lim, pts_dist_lim);
+    ptf.filter(*temp_cloud);  
+
+    ptf.setInputCloud(temp_cloud);
+    ptf.setFilterFieldName("y");
+    ptf.setFilterLimits(-pts_dist_lim, pts_dist_lim);
+    ptf.filter(*SS.pts_);
 }
 
 void SkelEx::normal_estimation() {
@@ -129,17 +148,27 @@ void SkelEx::normal_estimation() {
         // leaf_size_ds += 0.005;
         iter++;
     }
-
-    // Statistical Outlier Removal
-    pcl::StatisticalOutlierRemoval<pcl::PointNormal> sor;
-    sor.setInputCloud(cloud_w_normals);
-    sor.setMeanK(20);
-    sor.setStddevMulThresh(1.5); // Remove point that are > mean + 2.0*std away
-    sor.filter(*cloud_w_normals);
-
     RCLCPP_INFO(node_->get_logger(), "VGF Iterations: %d", iter);
+    
+    pcl::KdTreeFLANN<pcl::PointNormal> kdtree;
+    kdtree.setInputCloud(cloud_w_normals);
 
+    std::vector<int> indices;
+    std::vector<float> sqr_distances;
+    pcl::PointCloud<pcl::PointNormal>::Ptr filtered_points(new pcl::PointCloud<pcl::PointNormal>);
+
+    double density_r = 3 * leaf_size_ds;
+    int min_nbs = 8;
+    for (size_t i = 0; i < cloud_w_normals->size(); ++i) {
+        int neighbors = kdtree.radiusSearch(cloud_w_normals->points[i], density_r, indices, sqr_distances);
+        if (neighbors >= min_nbs) {
+            filtered_points->points.push_back(cloud_w_normals->points[i]);
+        }
+    }
+    
+    *cloud_w_normals = *filtered_points;
     pcd_size_ = cloud_w_normals->points.size();
+    
     SS.pts_->clear();
     SS.normals_->clear();
     SS.pts_matrix.resize(pcd_size_, 3);
@@ -503,8 +532,8 @@ void SkelEx::vertex_recenter() {
 }
 
 void SkelEx::vertex_smooth() {
-    const int iterations = 3;
-    const int k_smooth = 7;
+    const int iterations = 5;
+    const double r_smooth = 5.0;
     std::vector<int> indxs;
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
 
@@ -524,10 +553,11 @@ void SkelEx::vertex_smooth() {
         Eigen::MatrixXd current = new_skelver;
 
         for (int i = 0; i < current.rows(); ++i) {
-            std::vector<int> neigh_indices(k_smooth);
-            std::vector<float> neigh_dists(k_smooth);
 
-            if (kdtree.nearestKSearch((*skel_cloud)[i], k_smooth, neigh_indices, neigh_dists) > 0) {
+            std::vector<int> neigh_indices;
+            std::vector<float> neigh_dists;
+            if (kdtree.radiusSearch((*skel_cloud)[i], r_smooth, neigh_indices, neigh_dists) > 0) {
+
                 Eigen::MatrixXd neigh_pos(neigh_indices.size(), 3);
                 for (int j = 0; j < (int)neigh_indices.size(); ++j) {
                     neigh_pos.row(j) = current.row(neigh_indices[j]);
@@ -556,6 +586,17 @@ void SkelEx::vertex_smooth() {
     }
 
     SS.skelver = new_skelver;
+}
+
+void SkelEx::get_vertices() {
+    SS.vertices_->clear();
+    pcl::PointXYZ pt;
+    for (int i=0; i<(int)SS.skelver.rows(); ++i) {
+        pt.x = SS.skelver(i,0);
+        pt.y = SS.skelver(i,1);
+        pt.z = SS.skelver(i,2);
+        SS.vertices_->points.push_back(pt);
+    }
 }
 
 

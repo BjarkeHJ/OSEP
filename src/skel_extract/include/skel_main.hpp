@@ -13,7 +13,7 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/passthrough.h>
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -30,6 +30,7 @@ struct Vector3dCompare // lexicographic ordering: return true if v1 is ordered B
 struct SkeletonStructure {
     pcl::PointCloud<pcl::PointXYZ>::Ptr pts_;
     pcl::PointCloud<pcl::Normal>::Ptr normals_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr vertices_; // Final local vertices
 
     Eigen::MatrixXd pts_matrix;
     Eigen::MatrixXd nrs_matrix;
@@ -51,6 +52,7 @@ public:
     void init();
     void main();
     void visualizer();
+    void distance_filter();
     void normal_estimation();
     void similarity_neighbor_extraction();
     void drosa();
@@ -58,6 +60,7 @@ public:
     void vertex_sampling();
     void vertex_smooth();
     void vertex_recenter();
+    void get_vertices();
 
     /* Helper Functions */
     double similarity_metric(pcl::PointXYZ &p1, pcl::Normal &v1, pcl::PointXYZ &p2, pcl::Normal &v2, double range_r);
@@ -81,6 +84,7 @@ private:
     rclcpp::Node::SharedPtr node_;
 
     /* Params */
+    double pts_dist_lim = 35; 
     int ne_KNN = 20; //Normal Estimation neighbors
     int k_KNN = 10; //Surface neighbors 
     double leaf_size_ds;

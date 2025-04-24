@@ -22,7 +22,7 @@ set(dependencies
 find_package(PCL 1.12 REQUIRED)
 
 add_executable(${EXEC_NAME}
-              src/pub_node.cpp)
+              src/lidar_pub_node.cpp)
 
 target_include_directories(${EXEC_NAME} PUBLIC
                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
