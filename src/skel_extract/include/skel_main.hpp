@@ -57,6 +57,7 @@ public:
     void dcrosa();
     void vertex_sampling();
     void vertex_smooth();
+    void vertex_recenter();
 
     /* Helper Functions */
     double similarity_metric(pcl::PointXYZ &p1, pcl::Normal &v1, pcl::PointXYZ &p2, pcl::Normal &v2, double range_r);
@@ -87,7 +88,7 @@ private:
     int drosa_iter = 3; //Number of drosa iterations
     int dcrosa_iter = 2;
     double max_projection_range = 10.0; //Maximum projection range during ROSA position [m]
-    double alpha = 0.7; //Recenter fuse coefficient
+    double alpha = 0.3; //Recenter fuse coefficient
 
     /* Data */
     int pcd_size_;

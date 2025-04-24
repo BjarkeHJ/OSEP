@@ -1,6 +1,9 @@
 /* 
 
 Main skeleton extraction algorithm 
+Implementation of ROSA Point Extraction 
+with Implementation of Fallback strategies 
+for Planar Surfaces
 
 */
 
@@ -41,6 +44,8 @@ void SkelEx::main() {
 
     vertex_sampling();
 
+    vertex_recenter();
+    
     vertex_smooth();
 
     visualizer(); // For publishing at the end of each iteration...
@@ -80,7 +85,6 @@ void SkelEx::visualizer() {
     }
     vis->publish_cloud_debug(out_cloud, frame_id);
 }
-
 
 void SkelEx::normal_estimation() {
     // Normalization
@@ -286,7 +290,7 @@ void SkelEx::drosa() {
         if (planar_score < PLANAR_TH) {
             Eigen::RowVector3d slice_pt_mean = extract_pts.colwise().mean();
             Eigen::RowVector3d slice_nrm_mean = extract_nrs.colwise().mean();
-            center = slice_pt_mean - slice_nrm_mean * (max_projection_range / 2);
+            center = slice_pt_mean - slice_nrm_mean * (max_projection_range / 2); // Project skeleton based on mean point and mean normal
         }
         else {
             center = closest_projection_point(extract_pts, extract_nrs);
@@ -416,9 +420,9 @@ void SkelEx::vertex_sampling() {
     
     pcl::KdTreeFLANN<pcl::PointXYZ> fps_tree;
     fps_tree.setInputCloud(pset_cloud);
-    SS.skelver.resize(0,3);
+    SS.skelver.resize(0, 3);
     
-    double sample_radius = leaf_size_ds;
+    double sample_radius = 1.0 * leaf_size_ds;
     std::cout << "Vertex Sampling Radius: " << sample_radius << std::endl;
 
     // Farthest Point Sampling (FPS) / Skeletonization / Vertex selection
@@ -473,9 +477,35 @@ void SkelEx::vertex_sampling() {
     }
 }
 
+void SkelEx::vertex_recenter() {
+    ExtractTools et_vr;
+    std::vector<std::vector<int>> vertex_to_pts(SS.skelver.rows());
+
+    // Inverse correspondence map
+    for (int i=0; i<SS.corresp.rows(); ++i) {
+        int vert_idx = static_cast<int>(SS.corresp(i,0));
+        vertex_to_pts[vert_idx].push_back(i);
+    }
+
+    for (int i=0; i<SS.skelver.rows(); ++i) {
+        auto &idxs = vertex_to_pts[i];
+
+        Eigen::MatrixXi c_indxs = Eigen::Map<Eigen::MatrixXi>(idxs.data(), idxs.size(), 1);
+        Eigen::MatrixXd c_indxs_d = c_indxs.cast<double>();
+        Eigen::MatrixXd extract_pts = et_vr.rows_ext_M(c_indxs_d, SS.pts_matrix);
+        Eigen::MatrixXd extract_nrs = et_vr.rows_ext_M(c_indxs_d, SS.nrs_matrix);
+
+        Eigen::Vector3d eucl_center = extract_pts.colwise().mean();
+        Eigen::Vector3d current = SS.skelver.row(i);
+        Eigen::Vector3d fuse_center = alpha * current + (1.0 - alpha) * eucl_center;
+        SS.skelver.row(i) = fuse_center.transpose();
+    }
+}
+
 void SkelEx::vertex_smooth() {
     const int iterations = 3;
-    const int k_smooth = 10;
+    const int k_smooth = 7;
+    std::vector<int> indxs;
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
 
     // Build skeleton vertex cloud for KNN
