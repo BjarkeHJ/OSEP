@@ -24,9 +24,19 @@ void PathPlanner::init() {
     GS.global_vertices.reset(new pcl::PointCloud<pcl::PointXYZ>);
     local_pts.reset(new pcl::PointCloud<pcl::PointXYZ>);
     local_vertices.reset(new pcl::PointCloud<pcl::PointXYZ>);
-
 }
 
 void PathPlanner::main() {
+    auto t_start = std::chrono::high_resolution_clock::now();
+
+    update_skeleton();
+
+    auto t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> t_elapsed = t_end - t_start;
+    RCLCPP_INFO(node_->get_logger(), "Time Elapsed: %f seconds", t_elapsed.count());
+}
+
+void PathPlanner::update_skeleton() {
     
 }
+

@@ -42,6 +42,7 @@ private:
 
 void SkeletonExtractionNode::init() {
     RCLCPP_INFO(this->get_logger(), "Initializing Modules and Data Structures...");
+    
     /* Subscriber, Publishers, Timers, etc... */
     pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/lidar_scan", 10, std::bind(&SkeletonExtractionNode::pcd_callback, this, std::placeholders::_1));
     vertex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/local_vertices", 10);
