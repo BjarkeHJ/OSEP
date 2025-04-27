@@ -11,6 +11,8 @@ ROS2 node
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <tf2_sensor_msgs/tf2_sensor_msgs.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 class SkeletonExtractionNode : public rclcpp::Node {
@@ -27,6 +29,7 @@ public:
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pcd_sub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr vertex_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr vertex_pub_timer_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -53,6 +56,7 @@ void SkeletonExtractionNode::init() {
     /* Subscriber, Publishers, Timers, etc... */
     pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/lidar_scan", 10, std::bind(&SkeletonExtractionNode::pcd_callback, this, std::placeholders::_1));
     vertex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/local_vertices", 10);
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/local_points", 10);
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&SkeletonExtractionNode::run, this));
     vertex_pub_timer_ = this->create_wall_timer(std::chrono::milliseconds(vertex_pub_timer_ms), std::bind(&SkeletonExtractionNode::publish_vertices, this));
     tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -108,6 +112,25 @@ void SkeletonExtractionNode::run() {
     if (run_flag) {
         run_flag = false;
         skel_ex->main();
+
+        sensor_msgs::msg::PointCloud2 cloud_in;
+        sensor_msgs::msg::PointCloud2 cloud_out;
+        pcl::toROSMsg(*skel_ex->SS.pts_, cloud_in);
+
+        cloud_in.header.frame_id = "lidar_frame";  // <-- Replace with your sensor frame
+        cloud_in.header.stamp = curr_tf.header.stamp;
+
+        try {
+            // Transform the point cloud
+            tf2::doTransform(cloud_in, cloud_out, curr_tf);
+
+            // Now cloud_out is in the target_frame
+            cloud_pub_->publish(cloud_out);
+        }
+        catch (tf2::TransformException &ex) {
+            RCLCPP_WARN(this->get_logger(), "Transform failed: %s", ex.what());
+        }
+
     }
 }
 

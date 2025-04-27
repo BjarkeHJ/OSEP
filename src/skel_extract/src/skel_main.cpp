@@ -98,13 +98,13 @@ void SkelEx::distance_filter() {
 
 void SkelEx::normal_estimation() {
     // Normalization
-    pcl::PointXYZ min, max;
-    pcl::getMinMax3D(*SS.pts_, min, max);
-    double x_scale, y_scale, z_scale;
-    x_scale = max.x - min.x;
-    y_scale = max.y - min.y;
-    z_scale = max.z - min.z;
-    norm_scale = std::max(x_scale, std::max(y_scale, z_scale));
+    // pcl::PointXYZ min, max;
+    // pcl::getMinMax3D(*SS.pts_, min, max);
+    // double x_scale, y_scale, z_scale;
+    // x_scale = max.x - min.x;
+    // y_scale = max.y - min.y;
+    // z_scale = max.z - min.z;
+    // norm_scale = std::max(x_scale, std::max(y_scale, z_scale));
     // pcl::compute3DCentroid(*SS.pts_, centroid);
 
     // for (int i=0; i<pcd_size_; ++i) {
@@ -589,9 +589,6 @@ void SkelEx::get_vertices() {
         pt.x = ver_tf(0);
         pt.y = ver_tf(1);
         pt.z = ver_tf(2);
-        // pt.x = SS.skelver(i,0);
-        // pt.y = SS.skelver(i,1);
-        // pt.z = SS.skelver(i,2);
         SS.vertices_->points.push_back(pt);
     }
 }

@@ -94,7 +94,7 @@ private:
     int max_points = 300; //Goal for downsampling
     int drosa_iter = 3; //Number of drosa iterations
     int dcrosa_iter = 2;
-    double max_projection_range = 10.0; //Maximum projection range during ROSA position [m]
+    double max_projection_range = 15.0; //Maximum projection range during ROSA position [m]
     double alpha = 0.3; //Recenter fuse coefficient
 
     /* Data */

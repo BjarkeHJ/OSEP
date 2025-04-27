@@ -16,6 +16,7 @@ find_package(pcl_conversions REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
 
 # Dependencies list
 set(dependencies
@@ -23,7 +24,8 @@ set(dependencies
     sensor_msgs
     visualization_msgs
     pcl_conversions
-    tf2_ros)
+    tf2_ros
+    tf2_sensor_msgs)
 
 # Other libraries
 find_package(Eigen3 REQUIRED)
