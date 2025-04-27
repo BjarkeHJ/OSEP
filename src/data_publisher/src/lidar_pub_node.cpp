@@ -22,8 +22,9 @@ private:
     void publishPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr pcd_msg) {
         // sensor_msgs::msg::PointCloud2 output;
         // pcl::toROSMsg(*cloud, output);
-        pcd_msg->header.frame_id = "map";
-        pcd_msg->header.stamp = now();
+        pcd_msg->header.frame_id = "lidar_frame";
+        pcd_msg->header.stamp = this->now();
+        // pcd_msg->header.stamp = pcd_msg->header.stamp;
         pub_->publish(*pcd_msg);
     }
 

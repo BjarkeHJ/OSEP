@@ -7,6 +7,9 @@ ROS2 node
 #include "skel_main.hpp"
 #include <chrono>
 #include <rclcpp/rclcpp.hpp>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -18,6 +21,7 @@ public:
 
     void init();
     void pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr pcd_msg);
+    void set_transform();
     void run();
     void publish_vertices();
 
@@ -25,6 +29,8 @@ public:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr vertex_pub_;
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr vertex_pub_timer_;
+    std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
 private:
     /* Utils */
@@ -37,6 +43,7 @@ private:
 
     /* Data */
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_;
+    geometry_msgs::msg::TransformStamped curr_tf;
 };
 
 
@@ -48,6 +55,8 @@ void SkeletonExtractionNode::init() {
     vertex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/local_vertices", 10);
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&SkeletonExtractionNode::run, this));
     vertex_pub_timer_ = this->create_wall_timer(std::chrono::milliseconds(vertex_pub_timer_ms), std::bind(&SkeletonExtractionNode::publish_vertices, this));
+    tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
     /* Params */
     // Stuff from launch file (ToDo)...
@@ -68,7 +77,31 @@ void SkeletonExtractionNode::pcd_callback(const sensor_msgs::msg::PointCloud2::S
     }
     pcl::fromROSMsg(*pcd_msg, *pcd_);
     skel_ex->SS.pts_ = pcd_;
+
+    try {
+        // curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", pcd_msg->header.stamp, rclcpp::Duration::from_seconds(0.1));
+        curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", tf2::TimePointZero);
+        set_transform();
+    }
+    catch (const tf2::TransformException &ex) {
+        RCLCPP_ERROR(this->get_logger(), "Transform Lookup Failed: %s", ex.what());
+        return;
+    }
+
     run_flag = true;
+}
+
+void SkeletonExtractionNode::set_transform() {
+    Eigen::Quaterniond q(curr_tf.transform.rotation.w,
+        curr_tf.transform.rotation.x,
+        curr_tf.transform.rotation.y,
+        curr_tf.transform.rotation.z);
+    Eigen::Matrix3d R = q.toRotationMatrix();
+    Eigen::Vector3d t(curr_tf.transform.translation.x,
+        curr_tf.transform.translation.y,
+        curr_tf.transform.translation.z);
+    skel_ex->tf_rot = R;
+    skel_ex->tf_trans = t;
 }
 
 void SkeletonExtractionNode::run() {
@@ -82,8 +115,8 @@ void SkeletonExtractionNode::publish_vertices() {
     if (skel_ex->SS.vertices_ && !skel_ex->SS.vertices_->empty()) {
         sensor_msgs::msg::PointCloud2 vertex_msg;
         pcl::toROSMsg(*skel_ex->SS.vertices_, vertex_msg);
-        vertex_msg.header.frame_id = "map";
-        vertex_msg.header.stamp = now();
+        vertex_msg.header.frame_id = "lidar_frame";
+        vertex_msg.header.stamp = curr_tf.header.stamp;
         vertex_pub_->publish(vertex_msg);
     }
     else RCLCPP_INFO(this->get_logger(), "WARNING: Waiting for first vertex set...");

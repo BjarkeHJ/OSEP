@@ -15,13 +15,15 @@ find_package(rclcpp REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 # Dependencies list
 set(dependencies
     rclcpp
     sensor_msgs
     visualization_msgs
-    pcl_conversions)
+    pcl_conversions
+    tf2_ros)
 
 # Other libraries
 find_package(Eigen3 REQUIRED)

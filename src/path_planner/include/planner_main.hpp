@@ -3,6 +3,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <pcl/common/common.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <Eigen/Core>
 
 struct GlobalSkeleton {
@@ -23,58 +24,23 @@ public:
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_pts;
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_vertices;
 
-    Eigen::Matrix3d tf_rot;
-    Eigen::Vector3d tf_trans;
-
 private:
     rclcpp::Node::SharedPtr node_;
 
+    /* Functions */
+    void lowpass_update(int idx, const pcl::PointXYZ& new_pt);
+    void add_new_vertex(const pcl::PointXYZ& pt);
+
     /* Data */
+    pcl::KdTreeFLANN<pcl::PointXYZ> gskel_tree;
 
     /* Params */
-    double lkf_pn = 0.001; // LKF process noise
-    double lkf_mn = 0.1; // LKF measurement noise
-};
+    double fuse_dist_th = 3.0;
+    double fuse_alpha = 0.3;
 
-/* Linear Kalman Filter for Vertex Fusion*/
-struct SkeletonVertex
-{
-    Eigen::Vector3d position;
-    Eigen::Matrix3d covariance;
-    int observation_count = 0;
-    bool confidence_check = false;
-    Eigen::Vector3d state;
-    Eigen::Matrix3d P;
+    double kf_pn = 0.001; // LKF process noise
+    double kf_mn = 0.1; // LKF measurement noise
+    double kf_fuse_th = 1.0; // Distance threshold for fusing vertices
 };
-
-class VertexLKF {
-public:
-    VertexLKF(double process_noise = 0.1f, double measurement_noise = 0.5f) {
-        Q = Eigen::Matrix3d::Identity() * process_noise;
-        R = Eigen::Matrix3d::Identity() * measurement_noise;
-    }
-    void initialize(Eigen::Vector3d initial_position, Eigen::Matrix3d covariance) {
-        x = initial_position;
-        P = covariance;
-    }
-    void update(const Eigen::Vector3d &z) {
-        // Prediction 
-        Eigen::Vector3d x_pred = x;
-        Eigen::Matrix3d P_pred = P + Q;
-        // Kalman Gain
-        Eigen::Matrix3d K = P_pred * (P_pred + R).inverse();
-        // Correction
-        x = x_pred + K * (z - x_pred);
-        P = (Eigen::Matrix3d::Identity() - K) * P_pred;
-    }
-    Eigen::Vector3d getState() const {return x;}
-    Eigen::Matrix3d getCovariance() const {return P;}
-private:
-    Eigen::Vector3d x;
-    Eigen::Matrix3d P;
-    Eigen::Matrix3d Q;
-    Eigen::Matrix3d R;
-};
-
 
 #endif //PLANNER_MAIN_

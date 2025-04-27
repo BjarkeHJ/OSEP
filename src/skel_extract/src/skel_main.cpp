@@ -580,12 +580,18 @@ void SkelEx::vertex_smooth() {
 }
 
 void SkelEx::get_vertices() {
+    // Transform local vertices for global skeleton increment...
     SS.vertices_->clear();
     pcl::PointXYZ pt;
     for (int i=0; i<(int)SS.skelver.rows(); ++i) {
-        pt.x = SS.skelver(i,0);
-        pt.y = SS.skelver(i,1);
-        pt.z = SS.skelver(i,2);
+        Eigen::Vector3d ver_tf = SS.skelver.row(i);
+        ver_tf = tf_rot * ver_tf + tf_trans;
+        pt.x = ver_tf(0);
+        pt.y = ver_tf(1);
+        pt.z = ver_tf(2);
+        // pt.x = SS.skelver(i,0);
+        // pt.y = SS.skelver(i,1);
+        // pt.z = SS.skelver(i,2);
         SS.vertices_->points.push_back(pt);
     }
 }

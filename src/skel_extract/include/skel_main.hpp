@@ -80,6 +80,9 @@ public:
     /* Data */
     SkeletonStructure SS;
 
+    Eigen::Matrix3d tf_rot;
+    Eigen::Vector3d tf_trans;
+
 private:
     rclcpp::Node::SharedPtr node_;
 
