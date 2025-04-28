@@ -84,7 +84,8 @@ void SkeletonExtractionNode::pcd_callback(const sensor_msgs::msg::PointCloud2::S
 
     try {
         // curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", pcd_msg->header.stamp, rclcpp::Duration::from_seconds(0.1));
-        curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", tf2::TimePointZero);
+        // curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", tf2::TimePointZero);
+        curr_tf = tf_buffer_->lookupTransform("odom", "lidar_frame", tf2::TimePointZero);
         set_transform();
     }
     catch (const tf2::TransformException &ex) {
@@ -117,14 +118,16 @@ void SkeletonExtractionNode::run() {
         sensor_msgs::msg::PointCloud2 cloud_out;
         pcl::toROSMsg(*skel_ex->SS.pts_, cloud_in);
 
-        cloud_in.header.frame_id = "lidar_frame";  // <-- Replace with your sensor frame
+        cloud_in.header.frame_id = "lidar_frame";
         cloud_in.header.stamp = curr_tf.header.stamp;
+        // cloud_in.header.stamp = this->now();
 
         try {
             // Transform the point cloud
             tf2::doTransform(cloud_in, cloud_out, curr_tf);
 
             // Now cloud_out is in the target_frame
+            cloud_out.header.frame_id = "odom";
             cloud_pub_->publish(cloud_out);
         }
         catch (tf2::TransformException &ex) {
@@ -140,6 +143,7 @@ void SkeletonExtractionNode::publish_vertices() {
         pcl::toROSMsg(*skel_ex->SS.vertices_, vertex_msg);
         vertex_msg.header.frame_id = "lidar_frame";
         vertex_msg.header.stamp = curr_tf.header.stamp;
+        // vertex_msg.header.stamp = this->now();
         vertex_pub_->publish(vertex_msg);
     }
     else RCLCPP_INFO(this->get_logger(), "WARNING: Waiting for first vertex set...");

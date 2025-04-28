@@ -11,6 +11,7 @@ Path Planner Node
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -33,6 +34,7 @@ public:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr gskel_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr adj_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr wayp_pub_;
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr gskel_timer_;
 
@@ -55,8 +57,9 @@ void PlannerNode::init() {
     pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/local_points", 10, std::bind(&PlannerNode::pcd_callback, this, std::placeholders::_1));
     vertex_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/local_vertices", 10, std::bind(&PlannerNode::vertex_callback, this, std::placeholders::_1));
     gskel_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_skeleton", 10);
-    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_points", 10);
     adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/adjacency_graph", 10);
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_points", 10);
+    wayp_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/next_waypoint", 10);
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
     gskel_timer_ = this->create_wall_timer(std::chrono::milliseconds(gskel_timer_ms), std::bind(&PlannerNode::publish_gskel, this));
@@ -89,7 +92,8 @@ void PlannerNode::pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cl
 
     sensor_msgs::msg::PointCloud2 output_msg;
     pcl::toROSMsg(*planner->GS.global_pts, output_msg);
-    output_msg.header.frame_id = "World";
+    // output_msg.header.frame_id = "World";
+    output_msg.header.frame_id = "odom";
     output_msg.header.stamp = cloud_msg->header.stamp;
     cloud_pub_->publish(output_msg);
 }
@@ -108,12 +112,14 @@ void PlannerNode::publish_gskel() {
     if (planner->GS.global_vertices && !planner->GS.global_vertices->empty()) {
         sensor_msgs::msg::PointCloud2 output;
         pcl::toROSMsg(*planner->GS.global_vertices, output);
-        output.header.frame_id = "World";
+        // output.header.frame_id = "World";
+        output.header.frame_id = "odom";
         output.header.stamp = now();
         gskel_pub_->publish(output);
 
         visualization_msgs::msg::Marker lines;
-        lines.header.frame_id = "World";
+        // lines.header.frame_id = "World";
+        lines.header.frame_id = "odom";
         lines.header.stamp = this->get_clock()->now();
         lines.type = visualization_msgs::msg::Marker::LINE_LIST;
         lines.action = visualization_msgs::msg::Marker::ADD;
