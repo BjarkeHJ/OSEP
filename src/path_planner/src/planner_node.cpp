@@ -48,6 +48,9 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices;
 
     pcl::VoxelGrid<pcl::PointXYZ> vgf_ds;
+
+    // std::string global_frame_id = "World";
+    std::string global_frame_id = "odom";
 };
 
 void PlannerNode::init() {
@@ -92,8 +95,7 @@ void PlannerNode::pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cl
 
     sensor_msgs::msg::PointCloud2 output_msg;
     pcl::toROSMsg(*planner->GS.global_pts, output_msg);
-    // output_msg.header.frame_id = "World";
-    output_msg.header.frame_id = "odom";
+    output_msg.header.frame_id = global_frame_id;
     output_msg.header.stamp = cloud_msg->header.stamp;
     cloud_pub_->publish(output_msg);
 }
@@ -112,14 +114,12 @@ void PlannerNode::publish_gskel() {
     if (planner->GS.global_vertices && !planner->GS.global_vertices->empty()) {
         sensor_msgs::msg::PointCloud2 output;
         pcl::toROSMsg(*planner->GS.global_vertices, output);
-        // output.header.frame_id = "World";
-        output.header.frame_id = "odom";
+        output.header.frame_id = global_frame_id;
         output.header.stamp = now();
         gskel_pub_->publish(output);
 
         visualization_msgs::msg::Marker lines;
-        // lines.header.frame_id = "World";
-        lines.header.frame_id = "odom";
+        lines.header.frame_id = global_frame_id;
         lines.header.stamp = this->get_clock()->now();
         lines.type = visualization_msgs::msg::Marker::LINE_LIST;
         lines.action = visualization_msgs::msg::Marker::ADD;

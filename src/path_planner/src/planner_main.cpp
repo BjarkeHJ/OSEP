@@ -13,7 +13,7 @@ PathPlanner::PathPlanner(rclcpp::Node::SharedPtr node) : node_(node)
 }
 
 void PathPlanner::init() {
-    RCLCPP_INFO(node_->get_logger(), "Initializing Moduel: Online Skeleton Guided Path Planner");
+    RCLCPP_INFO(node_->get_logger(), "Initializing Module: Online Skeleton Guided Path Planner");
     /* Param */
     // Stuff from launch file (ToDo)...
 
@@ -28,10 +28,9 @@ void PathPlanner::init() {
 
 void PathPlanner::main() {
     auto t_start = std::chrono::high_resolution_clock::now();
-
     update_skeleton();
     graph_adj();
-    mst();
+    // mst();
     // clean_skeleton_graph();
 
     auto t_end = std::chrono::high_resolution_clock::now();
@@ -57,6 +56,7 @@ void PathPlanner::update_skeleton() {
             int global_idx = nearest_idx[0];
             lowpass_update(global_idx, lver);
         }
+        
         else {
             add_new_vertex(lver);
         }
@@ -129,7 +129,6 @@ void PathPlanner::graph_adj() {
     GS.global_adj = new_adj; // Replace old adjacency
 }
 
-
 void PathPlanner::mst() {
     int N_ver = GS.global_vertices->size();
     if (N_ver == 0 || GS.global_adj.empty()) {
@@ -166,9 +165,6 @@ void PathPlanner::mst() {
 
     RCLCPP_INFO(node_->get_logger(), "MST extraction complete. Tree edges: %d", N_ver - 1);
 }
-
-
-
 
 void PathPlanner::clean_skeleton_graph() {
     if (GS.global_vertices->empty() || GS.global_adj.empty()) {

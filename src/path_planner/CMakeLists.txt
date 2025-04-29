@@ -15,7 +15,7 @@ find_package(rclcpp REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED
+find_package(geometry_msgs REQUIRED)
 
 # Dependencies list
 set(dependencies

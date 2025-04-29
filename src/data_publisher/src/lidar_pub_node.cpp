@@ -15,13 +15,14 @@ class LidarPublisher : public rclcpp::Node {
 public:
     LidarPublisher() : Node("lidar_publisher_node") {
         pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/lidar_scan", 10);
-        // sub_ = create_subscription<sensor_msgs::msg::PointCloud2>("/pointcloud", 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
-        sub_ = create_subscription<sensor_msgs::msg::PointCloud2>("/isaac/point_cloud_0", 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
+        sub_ = create_subscription<sensor_msgs::msg::PointCloud2>("/pointcloud", 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
+        // sub_ = create_subscription<sensor_msgs::msg::PointCloud2>("/isaac/point_cloud_0", 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
     }
 
 private:
+    std::string local_frame_id = "lidar_frame";
     void publishPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr pcd_msg) {
-        pcd_msg->header.frame_id = "lidar_frame";
+        pcd_msg->header.frame_id = local_frame_id;
         // pcd_msg->header.stamp = this->now();
         pcd_msg->header.stamp = pcd_msg->header.stamp;
         pub_->publish(*pcd_msg);

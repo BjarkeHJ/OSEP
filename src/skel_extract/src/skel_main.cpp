@@ -39,24 +39,24 @@ void SkelEx::main() {
     drosa();
     dcrosa();
     vertex_sampling();
-    vertex_recenter();
+    // vertex_recenter();
     vertex_smooth();
     get_vertices();
 
-    // visualizer(); // For publishing at the end of each iteration...
+    visualizer(); // For publishing at the end of each iteration...
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> t_elapsed = t_end - t_start;
     RCLCPP_INFO(node_->get_logger(), "Time Elapsed: %f seconds", t_elapsed.count());
 }
 
 void SkelEx::visualizer() {
-    std::string frame_id = "map";
+    std::string frame_id = "odom";
     vis->publishPointCloud(SS.pts_, frame_id);
-    vis->publishNormals(SS.pts_, SS.normals_, frame_id, 1.0f);
+    // vis->publishNormals(SS.pts_, SS.normals_, frame_id, 1.0f);
 
     // Debugger cloud
     // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    // int idx = 700;
+    // int idx = 100;
     // Eigen::Vector3d pt_temp = pset.row(idx);
     // Eigen::Vector3d nrm_temp = vset.row(idx);
     // Eigen::MatrixXd as_temp = compute_active_samples(idx, pt_temp, nrm_temp);
@@ -66,12 +66,12 @@ void SkelEx::visualizer() {
     // }
     // vis->publish_cloud_debug(out_cloud, frame_id);
     
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    // for (int i=0; i<pcd_size_; ++i) {
-    //     pcl::PointXYZ pt(pset(i,0), pset(i,1), pset(i,2));
-    //     out_cloud->points.push_back(pt);
-    // }
-    // vis->publish_cloud_debug(out_cloud, frame_id);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    for (int i=0; i<pcd_size_; ++i) {
+        pcl::PointXYZ pt(pset(i,0), pset(i,1), pset(i,2));
+        out_cloud->points.push_back(pt);
+    }
+    vis->publish_cloud_debug(out_cloud, frame_id);
 
     // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // for (int i=0; i<(int)SS.skelver.rows(); ++i) {
@@ -205,7 +205,7 @@ void SkelEx::similarity_neighbor_extraction() {
     std::vector<int> indxs;
     std::vector<float> sq_dists;
     double w1, w2, w;
-    double radius_r = 5*leaf_size_ds;
+    double radius_r = 10*leaf_size_ds;
     double th_sim = 0.1*leaf_size_ds;
 
     for (int i=0; i<pcd_size_; ++i) {
@@ -315,7 +315,7 @@ void SkelEx::drosa() {
         else {
             center = closest_projection_point(extract_pts, extract_nrs);
         }
-
+        
         bool valid_center = (center - var_p_p).norm() < max_projection_range && center.maxCoeff() < 1e7;
         if (valid_center) {
             pset.row(pIdx) = center;

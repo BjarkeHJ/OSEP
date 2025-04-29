@@ -17,6 +17,7 @@ from omni.isaac.core import World
 from omni.isaac.core.utils.stage import add_reference_to_stage
 from omni.isaac.core.prims import XFormPrim
 from omni.isaac.sensor import Camera
+from omni.isaac.sensor import IMUSensor
 from omni.isaac.core.utils.extensions import enable_extension
 
 
@@ -92,6 +93,7 @@ class PegasusApp:
         vehicle_id: int = 0,
         camera: bool = True,
         lidar: bool = True,
+        imu: bool = True,
     ):
         odom_frame = XFormPrim(
             prim_path="/World/odom",
@@ -155,6 +157,18 @@ class PegasusApp:
             except Exception as e:
                 carb.log_error(f"Error publishing lidar: {e}")
 
+        if imu:
+            imu = self._initialize_imu(body_frame)
+            imu_frame_path = "/".join(
+                imu.prim_path.split("/")[:-1]
+            )
+            frame_prims.append(imu_frame_path)
+            try:
+                self._publish_imu(imu, vehicle_id)
+            except Exception as e:
+                carb.log_error(f"Error publishing imu: {e}")
+
+
         # Publish the TF tree, ensuring the correct hierarchy
         if len(frame_prims) >= 1:
             self._publish_tf(
@@ -168,6 +182,53 @@ class PegasusApp:
             position=body_frame.get_world_pose()[0],
         )
         return base_link_frame
+    
+    @staticmethod
+    def _initialize_imu(body_frame):
+        imu_frame = XFormPrim(
+            prim_path=body_frame.prim_path + "/imu_frame",
+            position=body_frame.get_world_pose()[0],
+        )
+        imu = IMUSensor(
+            prim_path=imu_frame.prim_path + "/imu",
+            name="imu",
+            frequency=60,
+            translation=np.array([0,0,0]),
+            orientation=np.array([1,0,0,0]),
+            linear_acceleration_filter_size=10,
+            angular_velocity_filter_size=10,
+            orientation_filter_size=10,
+        )
+        return imu
+
+    def _publish_imu(self, imu_sensor, vehicle_id):
+        topic_name = self.topic_prefix + f"/imu_{vehicle_id}"
+        
+        og.Controller.edit(
+            {"graph_path": f"/Graphs/ROS_IMU_{vehicle_id}", "evaluator_name": "execution"},
+            {
+                og.Controller.Keys.CREATE_NODES: [
+                    ("RosContext", "omni.isaac.ros2_bridge.ROS2Context"),
+                    ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
+                    ("RunSimFrame", "omni.isaac.core_nodes.OgnIsaacRunOneSimulationFrame"),
+                    ("CreateRenderProduct", "omni.isaac.core_nodes.IsaacCreateRenderProduct"),
+                    ("IMUHelper", "omni.isaac.ros2_bridge.ROS2ImuHelper"),
+                ],
+                og.Controller.Keys.CONNECT: [
+                    ("OnPlaybackTick.outputs:tick", "RunSimFrame.inputs:execIn"),
+                    ("RunSimFrame.outputs:step", "CreateRenderProduct.inputs:execIn"),
+                    ("CreateRenderProduct.outputs:execOut", "IMUHelper.inputs:execIn"),
+                    ("CreateRenderProduct.outputs:renderProductPath", "IMUHelper.inputs:renderProductPath"),
+                    ("RosContext.outputs:context", "IMUHelper.inputs:context"),
+                ],
+                og.Controller.Keys.SET_VALUES: [
+                    ("IMUHelper.inputs:topicName", topic_name),
+                    ("IMUHelper.inputs:frameId", "imu_frame"),
+                    # ("CreateRenderProduct.inputs:cameraPrim", f"{prims_utils.get_prim_path(imu_sensor)}"),
+                    ("CreateRenderProduct.inputs:cameraPrim", f"{imu_sensor.prim_path}"),
+                ],
+            },
+        )
 
     @staticmethod
     def _initialize_camera(body_frame, resolution=(640, 480)):
@@ -228,7 +289,8 @@ class PegasusApp:
         return lidar
 
     def _publish_lidar(self, lidar, vehicle_id):
-        topic_name = self.topic_prefix + f"/point_cloud_{vehicle_id}"
+        # topic_name = self.topic_prefix + f"/point_cloud_{vehicle_id}"
+        topic_name = "/pointcloud"
         og.Controller.edit(
             {"graph_path": "/Graphs/ROS_Lidar", "evaluator_name": "execution"},
             {

@@ -78,7 +78,7 @@ private:
     pcl::KdTreeFLANN<pcl::PointXYZ> gskel_tree;
 
     /* Params */
-    double fuse_dist_th = 5.0;
+    double fuse_dist_th = 1.0;
     double fuse_alpha = 0.5;
 };
 
