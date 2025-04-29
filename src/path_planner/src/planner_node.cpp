@@ -111,9 +111,9 @@ void PlannerNode::vertex_callback(const sensor_msgs::msg::PointCloud2::SharedPtr
 }
 
 void PlannerNode::publish_gskel() {
-    if (planner->GS.global_vertices && !planner->GS.global_vertices->empty()) {
+    if (planner->GS.global_vertices_cloud && !planner->GS.global_vertices_cloud->empty()) {
         sensor_msgs::msg::PointCloud2 output;
-        pcl::toROSMsg(*planner->GS.global_vertices, output);
+        pcl::toROSMsg(*planner->GS.global_vertices_cloud, output);
         output.header.frame_id = global_frame_id;
         output.header.stamp = now();
         gskel_pub_->publish(output);
@@ -137,13 +137,13 @@ void PlannerNode::publish_gskel() {
             for (int j : neighbors) {
                 // Make sure we only publish each edge once
                 if (i < j) {
-                    p1.x = planner->GS.global_vertices->points[i].x;
-                    p1.y = planner->GS.global_vertices->points[i].y;
-                    p1.z = planner->GS.global_vertices->points[i].z;
+                    p1.x = planner->GS.global_vertices_cloud->points[i].x;
+                    p1.y = planner->GS.global_vertices_cloud->points[i].y;
+                    p1.z = planner->GS.global_vertices_cloud->points[i].z;
 
-                    p2.x = planner->GS.global_vertices->points[j].x;
-                    p2.y = planner->GS.global_vertices->points[j].y;
-                    p2.z = planner->GS.global_vertices->points[j].z;
+                    p2.x = planner->GS.global_vertices_cloud->points[j].x;
+                    p2.y = planner->GS.global_vertices_cloud->points[j].y;
+                    p2.z = planner->GS.global_vertices_cloud->points[j].z;
 
                     lines.points.push_back(p1);
                     lines.points.push_back(p2);

@@ -21,7 +21,7 @@ void PathPlanner::init() {
 
     /* Data */
     GS.global_pts.reset(new pcl::PointCloud<pcl::PointXYZ>);
-    GS.global_vertices.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    GS.global_vertices_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     local_pts.reset(new pcl::PointCloud<pcl::PointXYZ>);
     local_vertices.reset(new pcl::PointCloud<pcl::PointXYZ>);
 }
@@ -30,7 +30,7 @@ void PathPlanner::main() {
     auto t_start = std::chrono::high_resolution_clock::now();
     update_skeleton();
     graph_adj();
-    // mst();
+    mst();
     // clean_skeleton_graph();
 
     auto t_end = std::chrono::high_resolution_clock::now();
@@ -47,59 +47,72 @@ void PathPlanner::update_skeleton() {
 
     RCLCPP_INFO(node_->get_logger(), "Updating Global Skeleton...");
 
-    for (const auto& lver : local_vertices->points) {
-        std::vector<int> nearest_idx(1);
-        std::vector<float> nearest_dist(1);
+    for (auto &pt : local_vertices->points) {
+        Eigen::Vector3d ver(pt.x, pt.y, pt.z);
+        bool matched = false;
+        for (auto &gver : GS.global_vertices) {
+            double dist = (gver.position - ver).norm();
+            if (dist < fuse_dist_th) {
+                VertexLKF kf(kf_pn, kf_mn);
+                kf.initialize(gver.position, gver.covariance);
+                kf.update(ver);
 
-        // If the nearest neighbor is within threshold distance -> fuse vertices
-        if (gskel_tree.nearestKSearch(lver, 1, nearest_idx, nearest_dist) > 0 && nearest_dist[0] < fuse_dist_th * fuse_dist_th) {
-            int global_idx = nearest_idx[0];
-            lowpass_update(global_idx, lver);
+                gver.position = kf.getState();
+                gver.covariance = kf.getCovariance();
+                gver.obs_count++;
+                double trace = gver.covariance.trace();
+                if (trace < fuse_conf_th) {
+                    gver.conf_check = true;
+                }
+                matched = true;
+                break;
+            }
         }
-        
-        else {
-            add_new_vertex(lver);
+
+        if (!matched) {
+            SkeletonVertex new_ver;
+            new_ver.position = ver;
+            new_ver.covariance = Eigen::Matrix3d::Identity();
+            new_ver.obs_count = 1;
+            new_ver.conf_check = false;
+            GS.global_vertices.push_back(new_ver);
+        }
+    }
+
+    GS.global_vertices_cloud->clear();
+    for (auto &gver : GS.global_vertices) {
+        if (gver.conf_check) {
+            pcl::PointXYZ pt(gver.position(0), gver.position(1), gver.position(2));
+            GS.global_vertices_cloud->points.push_back(pt);
         }
     }
 }
 
-void PathPlanner::lowpass_update(int idx, const pcl::PointXYZ& new_pt) {
-    pcl::PointXYZ& old_pt = GS.global_vertices->points[idx];
-    old_pt.x = (1.0 - fuse_alpha) * old_pt.x + fuse_alpha * new_pt.x;
-    old_pt.y = (1.0 - fuse_alpha) * old_pt.y + fuse_alpha * new_pt.y;
-    old_pt.z = (1.0 - fuse_alpha) * old_pt.z + fuse_alpha * new_pt.z;
-}
-
-void PathPlanner::add_new_vertex(const pcl::PointXYZ& pt) {
-    GS.global_vertices->points.push_back(pt);
-    gskel_tree.setInputCloud(GS.global_vertices);
-}
-
 void PathPlanner::graph_adj() {
-    if (!GS.global_vertices || GS.global_vertices->empty()) {
+    if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) {
         RCLCPP_WARN(node_->get_logger(), "No points in global skeleton. Skipping graph adjacency rebuild.");
         return;
     }
 
     // Create a new adjacency list
-    std::vector<std::vector<int>> new_adj(GS.global_vertices->size());
+    std::vector<std::vector<int>> new_adj(GS.global_vertices_cloud->size());
 
     pcl::KdTreeFLANN<pcl::PointXYZ> adj_tree;
-    adj_tree.setInputCloud(GS.global_vertices);
+    adj_tree.setInputCloud(GS.global_vertices_cloud);
 
     const int K = 5;          // Number of neighbors
     const float max_dist_th = 2.0 * fuse_dist_th; // Max distance for valid edges (meters)
     const float min_dist_th = 0.5 * fuse_dist_th;
 
-    for (size_t i = 0; i < GS.global_vertices->size(); ++i) {
+    for (size_t i = 0; i < GS.global_vertices_cloud->size(); ++i) {
         std::vector<int> indices;
         std::vector<float> distances;
 
-        int n_neighbors = adj_tree.nearestKSearch(GS.global_vertices->points[i], K, indices, distances);
+        int n_neighbors = adj_tree.nearestKSearch(GS.global_vertices_cloud->points[i], K, indices, distances);
 
         for (int j = 1; j < n_neighbors; ++j) { // Skip self (index 0)
             int nb_idx = indices[j];
-            float dist_to_nb = (GS.global_vertices->points[i].getVector3fMap() - GS.global_vertices->points[nb_idx].getVector3fMap()).norm();
+            float dist_to_nb = (GS.global_vertices_cloud->points[i].getVector3fMap() - GS.global_vertices_cloud->points[nb_idx].getVector3fMap()).norm();
 
             if (dist_to_nb > max_dist_th || dist_to_nb < min_dist_th) continue; // Too far or too close, skip
 
@@ -110,8 +123,8 @@ void PathPlanner::graph_adj() {
                 if (k == j) continue;
 
                 int other_nb_idx = indices[k];
-                float dist_nb_to_other = (GS.global_vertices->points[nb_idx].getVector3fMap() - GS.global_vertices->points[other_nb_idx].getVector3fMap()).norm();
-                float dist_to_other = (GS.global_vertices->points[i].getVector3fMap() - GS.global_vertices->points[other_nb_idx].getVector3fMap()).norm();
+                float dist_nb_to_other = (GS.global_vertices_cloud->points[nb_idx].getVector3fMap() - GS.global_vertices_cloud->points[other_nb_idx].getVector3fMap()).norm();
+                float dist_to_other = (GS.global_vertices_cloud->points[i].getVector3fMap() - GS.global_vertices_cloud->points[other_nb_idx].getVector3fMap()).norm();
 
                 if (dist_nb_to_other < dist_to_nb && dist_to_other < dist_to_nb) {
                     is_good_neighbor = false;
@@ -130,7 +143,7 @@ void PathPlanner::graph_adj() {
 }
 
 void PathPlanner::mst() {
-    int N_ver = GS.global_vertices->size();
+    int N_ver = GS.global_vertices_cloud->size();
     if (N_ver == 0 || GS.global_adj.empty()) {
         RCLCPP_WARN(node_->get_logger(), "Global skeleton is empty, cannot extract MST.");
         return;
@@ -142,8 +155,8 @@ void PathPlanner::mst() {
     for (int i = 0; i < N_ver; ++i) {
         for (int nb : GS.global_adj[i]) {
             if (nb <= i) continue;
-            Eigen::Vector3f ver_i = GS.global_vertices->points[i].getVector3fMap();
-            Eigen::Vector3f ver_nb = GS.global_vertices->points[nb].getVector3fMap();
+            Eigen::Vector3f ver_i = GS.global_vertices_cloud->points[i].getVector3fMap();
+            Eigen::Vector3f ver_nb = GS.global_vertices_cloud->points[nb].getVector3fMap();
             double weight = (ver_i - ver_nb).norm();
             mst_edges.push_back({i, nb, weight});
         }
@@ -167,7 +180,7 @@ void PathPlanner::mst() {
 }
 
 void PathPlanner::clean_skeleton_graph() {
-    if (GS.global_vertices->empty() || GS.global_adj.empty()) {
+    if (GS.global_vertices_cloud->empty() || GS.global_adj.empty()) {
         RCLCPP_WARN(node_->get_logger(), "Cannot clean an empty graph.");
         return;
     }
@@ -180,9 +193,9 @@ void PathPlanner::clean_skeleton_graph() {
     bool pruned = true;
     while (pruned) {
         pruned = false;
-        std::vector<bool> visited(GS.global_vertices->size(), false);
+        std::vector<bool> visited(GS.global_vertices_cloud->size(), false);
 
-        for (size_t i = 0; i < GS.global_vertices->size(); ++i) {
+        for (size_t i = 0; i < GS.global_vertices_cloud->size(); ++i) {
             if (!visited[i] && GS.global_adj[i].size() == 1) { // Leaf node
                 std::vector<int> branch;
                 int current = i;
@@ -228,22 +241,22 @@ void PathPlanner::clean_skeleton_graph() {
 
     // Step 2: Optional weighted smoothing
     for (int iter = 0; iter < smooth_iter; ++iter) {
-        std::vector<Eigen::Vector3f> new_positions(GS.global_vertices->size());
+        std::vector<Eigen::Vector3f> new_positions(GS.global_vertices_cloud->size());
 
-        for (size_t i = 0; i < GS.global_vertices->size(); ++i) {
+        for (size_t i = 0; i < GS.global_vertices_cloud->size(); ++i) {
             if (GS.global_adj[i].empty()) {
-                new_positions[i] = GS.global_vertices->points[i].getVector3fMap();
+                new_positions[i] = GS.global_vertices_cloud->points[i].getVector3fMap();
                 continue;
             }
 
-            Eigen::Vector3f avg_pos = GS.global_vertices->points[i].getVector3fMap();
+            Eigen::Vector3f avg_pos = GS.global_vertices_cloud->points[i].getVector3fMap();
             float total_weight = 1.0f;
 
             for (int nb : GS.global_adj[i]) {
-                Eigen::Vector3f diff = GS.global_vertices->points[nb].getVector3fMap() - GS.global_vertices->points[i].getVector3fMap();
+                Eigen::Vector3f diff = GS.global_vertices_cloud->points[nb].getVector3fMap() - GS.global_vertices_cloud->points[i].getVector3fMap();
                 float dist = diff.norm();
                 float weight = std::exp(-dist);
-                avg_pos += weight * GS.global_vertices->points[nb].getVector3fMap();
+                avg_pos += weight * GS.global_vertices_cloud->points[nb].getVector3fMap();
                 total_weight += weight;
             }
             avg_pos /= total_weight;
@@ -252,10 +265,10 @@ void PathPlanner::clean_skeleton_graph() {
         }
 
         // Update points
-        for (size_t i = 0; i < GS.global_vertices->size(); ++i) {
-            GS.global_vertices->points[i].x = new_positions[i].x();
-            GS.global_vertices->points[i].y = new_positions[i].y();
-            GS.global_vertices->points[i].z = new_positions[i].z();
+        for (size_t i = 0; i < GS.global_vertices_cloud->size(); ++i) {
+            GS.global_vertices_cloud->points[i].x = new_positions[i].x();
+            GS.global_vertices_cloud->points[i].y = new_positions[i].y();
+            GS.global_vertices_cloud->points[i].z = new_positions[i].z();
         }
     }
 

@@ -1,6 +1,8 @@
 #ifndef PLANNER_MAIN_
 #define PLANNER_MAIN_
 
+#include "kalman_vertex_fusion.hpp"
+
 #include <algorithm>
 #include <rclcpp/rclcpp.hpp>
 #include <pcl/common/common.h>
@@ -45,7 +47,9 @@ struct UnionFind {
 
 struct GlobalSkeleton {
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices_cloud;
+    std::vector<SkeletonVertex> global_vertices;
+
     std::vector<std::vector<int>> global_adj;
     std::vector<bool> visited;
 };
@@ -71,15 +75,16 @@ private:
     rclcpp::Node::SharedPtr node_;
 
     /* Functions */
-    void lowpass_update(int idx, const pcl::PointXYZ& new_pt);
-    void add_new_vertex(const pcl::PointXYZ& pt);
-
+    
     /* Data */
     pcl::KdTreeFLANN<pcl::PointXYZ> gskel_tree;
 
     /* Params */
-    double fuse_dist_th = 1.0;
     double fuse_alpha = 0.5;
+    double fuse_dist_th = 2.0;
+    double fuse_conf_th = 0.5;
+    double kf_pn = 0.001;
+    double kf_mn = 0.1;
 };
 
 #endif //PLANNER_MAIN_
