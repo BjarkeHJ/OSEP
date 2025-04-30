@@ -49,6 +49,8 @@ void SkelEx::main() {
     vertex_sampling();
     vertex_recenter();
     vertex_smooth();
+
+    // REMOVE VERTICES CLOSE TO GROUND!
     get_vertices();
 
     visualizer(); // For publishing at the end of each iteration...

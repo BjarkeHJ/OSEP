@@ -50,8 +50,8 @@ private:
 
     pcl::VoxelGrid<pcl::PointXYZ> vgf_ds;
 
-    std::string global_frame_id = "World";
-    // std::string global_frame_id = "odom";
+    // std::string global_frame_id = "World";
+    std::string global_frame_id = "odom";
 };
 
 void PlannerNode::init() {
