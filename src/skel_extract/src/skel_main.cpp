@@ -63,29 +63,62 @@ void SkelEx::visualizer() {
     // vis->publishPointCloud(SS.pts_, frame_id);
     // vis->publishNormals(SS.pts_, SS.normals_, frame_id, 1.0f);
 
+    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    
+    // // 1. Copy all point positions once
+    // for (int i = 0; i < pcd_size_; ++i) {
+    //     out_cloud->points[i].x = SS.pts_->points[i].x;
+    //     out_cloud->points[i].y = SS.pts_->points[i].y;
+    //     out_cloud->points[i].z = SS.pts_->points[i].z;
+
+    //     // Optional: set a default gray color
+    //     out_cloud->points[i].r = 128;
+    //     out_cloud->points[i].g = 128;
+    //     out_cloud->points[i].b = 128;
+    // }
+
+    // // 2. Color each cluster uniquely
+    // for (size_t c = 0; c < SS.clusters.size(); ++c) {
+    //     uint8_t r = static_cast<uint8_t>((37 * c) % 255);
+    //     uint8_t g = static_cast<uint8_t>((67 * c) % 255);
+    //     uint8_t b = static_cast<uint8_t>((101 * c) % 255);
+
+    //     for (int idx : SS.clusters[c]) {
+    //         out_cloud->points[idx].r = r;
+    //         out_cloud->points[idx].g = g;
+    //         out_cloud->points[idx].b = b;
+    //     }
+    // }
+
+    // // 3. Visualize
+    // vis->publish_clusters(out_cloud, frame_id);
+
+
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-    out_cloud->points.resize(pcd_size_);
+
     for (size_t c = 0; c < SS.clusters.size(); ++c) {
         uint8_t r = static_cast<uint8_t>((37 * c) % 255);
         uint8_t g = static_cast<uint8_t>((67 * c) % 255);
         uint8_t b = static_cast<uint8_t>((101 * c) % 255);
 
-        for (size_t i = 0; i < pcd_size_; ++i) {
-            out_cloud->points[i].x = SS.pts_->points[i].x;
-            out_cloud->points[i].y = SS.pts_->points[i].y;
-            out_cloud->points[i].z = SS.pts_->points[i].z;
-            // out_cloud->points[i].r = 128;
-            // out_cloud->points[i].g = 128;
-            // out_cloud->points[i].b = 128;
-        }
+        for (const auto& pt : SS.clusters[c]->points) {
+            pcl::PointXYZRGB pt_rgb;
+            pt_rgb.x = pt.x;
+            pt_rgb.y = pt.y;
+            pt_rgb.z = pt.z;
+            pt_rgb.r = r;
+            pt_rgb.g = g;
+            pt_rgb.b = b;
 
-        for (int idx : SS.clusters[c]) {
-            out_cloud->points[idx].r = r;
-            out_cloud->points[idx].g = g;
-            out_cloud->points[idx].b = b;
+            out_cloud->points.push_back(pt_rgb);
         }
     }
 
+    // out_cloud->width = out_cloud->points.size();
+    // out_cloud->height = 1;
+    // out_cloud->is_dense = true;
+
+    // Publish the combined colored cloud
     vis->publish_clusters(out_cloud, frame_id);
 
     // Debugger cloud
@@ -239,8 +272,8 @@ void SkelEx::similarity_neighbor_extraction() {
     std::vector<int> indxs;
     std::vector<float> sq_dists;
     double w1, w2, w;
-    double radius_r = 3*leaf_size_ds;
-    double th_sim = 0.1*leaf_size_ds;
+    double radius_r = 2.0*leaf_size_ds;
+    double th_sim = 0.2*leaf_size_ds;
 
     for (int i=0; i<pcd_size_; ++i) {
         std::vector<int>().swap(indxs);
@@ -635,34 +668,60 @@ void SkelEx::get_vertices() {
 
 
 void SkelEx::clustering() {
-    SS.clusters.clear();
-    int min_cluster_size = 10;
-    int max_cluster_size = 30;
-    std::vector<bool> visited(pcd_size_, false);
-    
-    for (int i=0; i<pcd_size_; ++i) {
-        if (visited[i]) continue;
+    float voxel_res = 2 * leaf_size_ds;
+    float seed_res = 10 * leaf_size_ds;
 
-        std::vector<int> cluster;
-        std::queue<int> q;
-        q.push(i);
-        visited[i] = true;
-        while (!q.empty()) {
-            int current = q.front();
-            q.pop();
-            cluster.push_back(current);
-            for (int nb : SS.neighs[current]) {
-                if (!visited[nb]) {
-                    visited[nb] = true;
-                    q.push(nb);
-                }
-            }
-        }
-        if (cluster.size() >= min_cluster_size) {
-            SS.clusters.push_back(cluster);
-        }
+    pcl::SupervoxelClustering<pcl::PointXYZ> super(voxel_res, seed_res);
+    super.setInputCloud(SS.pts_);
+    super.setNormalCloud(SS.normals_);
+
+    // Tuning weights — can be exposed as parameters
+    super.setNormalImportance(1.0f);
+    super.setSpatialImportance(0.9f);
+    super.setColorImportance(0.0f); // Since you're using XYZ only
+
+    std::map<uint32_t, pcl::Supervoxel<pcl::PointXYZ>::Ptr> supervoxel_clusters;
+    super.extract(supervoxel_clusters);
+
+    SS.clusters.clear();
+    for (const auto& kv : supervoxel_clusters) {
+        if (kv.second->voxels_->size() < 10) continue; // Skip small noisy patches
+        SS.clusters.push_back(kv.second->voxels_);
     }
 }
+
+
+
+// void SkelEx::clustering() {
+//     SS.clusters.clear();
+//     int min_cluster_size = static_cast<int>(std::floor(pcd_size_ * 0.1)); 
+//     // int max_cluster_size = static_cast<int>(std::floor(pcd_size_ * 0.1));
+//     std::vector<bool> visited(pcd_size_, false);
+    
+//     for (int i=0; i<pcd_size_; ++i) {
+//         if (visited[i]) continue;
+
+//         std::vector<int> cluster;
+//         std::queue<int> q;
+//         q.push(i);
+//         visited[i] = true;
+//         // while (!q.empty() && (int)cluster.size() < max_cluster_size) {
+//         while (!q.empty()) {
+//             int current = q.front();
+//             q.pop();
+//             cluster.push_back(current);
+//             for (int nb : SS.neighs[current]) {
+//                 if (!visited[nb]) {
+//                     visited[nb] = true;
+//                     q.push(nb);
+//                 }
+//             }
+//         }
+//         if ((int)cluster.size() >= min_cluster_size) {
+//             SS.clusters.push_back(cluster);
+//         }
+//     }
+// }
 
 
 

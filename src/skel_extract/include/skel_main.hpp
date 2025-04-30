@@ -16,6 +16,8 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 
+#include <pcl/segmentation/supervoxel_clustering.h>
+
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
@@ -33,7 +35,8 @@ struct SkeletonStructure {
     pcl::PointCloud<pcl::Normal>::Ptr normals_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices_; // Final local vertices
 
-    std::vector<std::vector<int>> clusters;
+    // std::vector<std::vector<int>> clusters;
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clusters;
 
     Eigen::MatrixXd pts_matrix;
     Eigen::MatrixXd nrs_matrix;
@@ -95,7 +98,7 @@ private:
 
     /* Params */
     double pts_dist_lim = 25; 
-    int ne_KNN = 20; //Normal Estimation neighbors
+    int ne_KNN = 10; //Normal Estimation neighbors
     int k_KNN = 10; //Surface neighbors 
     double leaf_size_ds;
     int max_points = 500; //Goal for downsampling
