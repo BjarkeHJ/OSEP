@@ -14,6 +14,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -91,7 +92,7 @@ private:
     int ne_KNN = 20; //Normal Estimation neighbors
     int k_KNN = 10; //Surface neighbors 
     double leaf_size_ds;
-    int max_points = 500; //Goal for downsampling
+    int max_points = 300; //Goal for downsampling
     int drosa_iter = 3; //Number of drosa iterations
     int dcrosa_iter = 2;
     double max_projection_range = 10.0; //Maximum projection range during ROSA position [m]

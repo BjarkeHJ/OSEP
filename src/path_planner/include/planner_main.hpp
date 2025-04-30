@@ -80,11 +80,16 @@ private:
     pcl::KdTreeFLANN<pcl::PointXYZ> gskel_tree;
 
     /* Params */
-    double fuse_alpha = 0.5;
+    int max_obs_wo_conf = 3; // Maximum number of iters without passing conf check before discarding...
     double fuse_dist_th = 2.0;
     double fuse_conf_th = 0.5;
-    double kf_pn = 0.001;
+    double kf_pn = 0.0001;
     double kf_mn = 0.1;
+
+
+
+
+    double fuse_alpha = 0.5;
 };
 
 #endif //PLANNER_MAIN_

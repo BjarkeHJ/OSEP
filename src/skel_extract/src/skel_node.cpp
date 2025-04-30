@@ -48,8 +48,8 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_;
     geometry_msgs::msg::TransformStamped curr_tf;
 
-    // std::string global_frame_id = "World";
-    std::string global_frame_id = "odom";
+    std::string global_frame_id = "World";
+    // std::string global_frame_id = "odom";
     std::string local_frame_id = "lidar_frame";
 };
 

@@ -31,7 +31,7 @@ void PathPlanner::main() {
     update_skeleton();
     graph_adj();
     mst();
-    // clean_skeleton_graph();
+    clean_skeleton_graph();
 
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> t_elapsed = t_end - t_start;
@@ -63,7 +63,16 @@ void PathPlanner::update_skeleton() {
                 double trace = gver.covariance.trace();
                 if (trace < fuse_conf_th) {
                     gver.conf_check = true;
+                    gver.unconfirmed_check = 0;
                 }
+                else {
+                    gver.unconfirmed_check++;
+                }
+                
+                if (gver.unconfirmed_check > max_obs_wo_conf) {
+                    continue;
+                }
+
                 matched = true;
                 break;
             }
@@ -149,7 +158,7 @@ void PathPlanner::mst() {
         return;
     }
 
-    RCLCPP_INFO(node_->get_logger(), "Extracting MST...");
+    RCLCPP_INFO(node_->get_logger(), "Extracting MST..  .");
 
     std::vector<Edge> mst_edges;
     for (int i = 0; i < N_ver; ++i) {
