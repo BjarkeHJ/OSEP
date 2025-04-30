@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <random>
+#include <queue>
 
 #include <rclcpp/rclcpp.hpp>
 #include <pcl/common/common.h>
@@ -31,6 +32,8 @@ struct SkeletonStructure {
     pcl::PointCloud<pcl::PointXYZ>::Ptr pts_;
     pcl::PointCloud<pcl::Normal>::Ptr normals_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices_; // Final local vertices
+
+    std::vector<std::vector<int>> clusters;
 
     Eigen::MatrixXd pts_matrix;
     Eigen::MatrixXd nrs_matrix;
@@ -62,6 +65,10 @@ public:
     void vertex_recenter();
     void get_vertices();
 
+    /* TESTING */
+    void clustering();
+
+
     /* Helper Functions */
     double similarity_metric(pcl::PointXYZ &p1, pcl::Normal &v1, pcl::PointXYZ &p2, pcl::Normal &v2, double range_r);
     void rosa_init(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<pcl::Normal>::Ptr &normals);
@@ -87,7 +94,7 @@ private:
     rclcpp::Node::SharedPtr node_;
 
     /* Params */
-    double pts_dist_lim = 35; 
+    double pts_dist_lim = 25; 
     int ne_KNN = 20; //Normal Estimation neighbors
     int k_KNN = 10; //Surface neighbors 
     double leaf_size_ds;
@@ -107,6 +114,7 @@ private:
     Eigen::MatrixXd vset; //Symmetry-axis vector set for ROSA computation
     Eigen::MatrixXd vvar; //Symmetry-axis vector variance in local region
     pcl::PointCloud<pcl::PointXYZ>::Ptr pset_cloud;
+
 };
 
 #endif //SKEL_MAIN_HPP_

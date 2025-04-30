@@ -26,6 +26,7 @@ void SkelEx::init() {
     SS.normals_.reset(new pcl::PointCloud<pcl::Normal>);
     SS.vertices_.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pset_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+
 }
 
 void SkelEx::main() {
@@ -34,25 +35,58 @@ void SkelEx::main() {
     pcd_size_ = SS.pts_->points.size();
     RCLCPP_INFO(node_->get_logger(), "Point Cloud Size: %d", pcd_size_);
     normal_estimation();
-    RCLCPP_INFO(node_->get_logger(), "Downsampled Point Cloud Size: %d", pcd_size_);
-    similarity_neighbor_extraction();
-    drosa();
-    dcrosa();
-    vertex_sampling();
-    // vertex_recenter();
-    vertex_smooth();
-    get_vertices();
 
-    visualizer(); // For publishing at the end of each iteration...
+    // Preprocessing (before normal_est????): Only process one branch connection - Detect new branches at junction!
+
+    RCLCPP_INFO(node_->get_logger(), "Downsampled Point Cloud Size: %d", pcd_size_);
+
+    similarity_neighbor_extraction();
+    clustering();
+    
+    // drosa();
+    // dcrosa();
+    // vertex_sampling();
+    // vertex_recenter();
+    // vertex_smooth();
+    // get_vertices();
+
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> t_elapsed = t_end - t_start;
     RCLCPP_INFO(node_->get_logger(), "Time Elapsed: %f seconds", t_elapsed.count());
+
+
+    visualizer(); // For publishing at the end of each iteration...
 }
 
 void SkelEx::visualizer() {
-    std::string frame_id = "odom";
-    vis->publishPointCloud(SS.pts_, frame_id);
+    std::string frame_id = "lidar_frame";
+    // vis->publishPointCloud(SS.pts_, frame_id);
     // vis->publishNormals(SS.pts_, SS.normals_, frame_id, 1.0f);
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    out_cloud->points.resize(pcd_size_);
+    for (size_t c = 0; c < SS.clusters.size(); ++c) {
+        uint8_t r = static_cast<uint8_t>((37 * c) % 255);
+        uint8_t g = static_cast<uint8_t>((67 * c) % 255);
+        uint8_t b = static_cast<uint8_t>((101 * c) % 255);
+
+        for (size_t i = 0; i < pcd_size_; ++i) {
+            out_cloud->points[i].x = SS.pts_->points[i].x;
+            out_cloud->points[i].y = SS.pts_->points[i].y;
+            out_cloud->points[i].z = SS.pts_->points[i].z;
+            // out_cloud->points[i].r = 128;
+            // out_cloud->points[i].g = 128;
+            // out_cloud->points[i].b = 128;
+        }
+
+        for (int idx : SS.clusters[c]) {
+            out_cloud->points[idx].r = r;
+            out_cloud->points[idx].g = g;
+            out_cloud->points[idx].b = b;
+        }
+    }
+
+    vis->publish_clusters(out_cloud, frame_id);
 
     // Debugger cloud
     // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -66,12 +100,12 @@ void SkelEx::visualizer() {
     // }
     // vis->publish_cloud_debug(out_cloud, frame_id);
     
-    pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    for (int i=0; i<pcd_size_; ++i) {
-        pcl::PointXYZ pt(pset(i,0), pset(i,1), pset(i,2));
-        out_cloud->points.push_back(pt);
-    }
-    vis->publish_cloud_debug(out_cloud, frame_id);
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    // for (int i=0; i<pcd_size_; ++i) {
+    //     pcl::PointXYZ pt(pset(i,0), pset(i,1), pset(i,2));
+    //     out_cloud->points.push_back(pt);
+    // }
+    // vis->publish_cloud_debug(out_cloud, frame_id);
 
     // pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // for (int i=0; i<(int)SS.skelver.rows(); ++i) {
@@ -205,7 +239,7 @@ void SkelEx::similarity_neighbor_extraction() {
     std::vector<int> indxs;
     std::vector<float> sq_dists;
     double w1, w2, w;
-    double radius_r = 10*leaf_size_ds;
+    double radius_r = 3*leaf_size_ds;
     double th_sim = 0.1*leaf_size_ds;
 
     for (int i=0; i<pcd_size_; ++i) {
@@ -303,6 +337,8 @@ void SkelEx::drosa() {
         Eigen::MatrixXd extract_pts = et_d.rows_ext_M(indxs_p, SS.pts_matrix);
         Eigen::MatrixXd extract_nrs = et_d.rows_ext_M(indxs_p, SS.nrs_matrix);
 
+        // If the number of active samples is too small -> SKIP!
+
         // Based on the plane slice normals - detect planar surfaces
         Eigen::Vector3d evals = PCA(extract_nrs);
         double planar_score = (evals(1) - evals(0)) / evals(2);
@@ -315,7 +351,9 @@ void SkelEx::drosa() {
         else {
             center = closest_projection_point(extract_pts, extract_nrs);
         }
-        
+
+        // Set max projection range to the minimum dimension of 
+
         bool valid_center = (center - var_p_p).norm() < max_projection_range && center.maxCoeff() < 1e7;
         if (valid_center) {
             pset.row(pIdx) = center;
@@ -331,6 +369,8 @@ void SkelEx::drosa() {
         RCLCPP_INFO(node_->get_logger(), "WARNING: goodPts Cloud EMPTY!");
         return;
     }
+
+    // THIS I DONT LIKE -- IT SHOULD JUST REMOVE POORLY DETERMINED POINTS -> Decrease N points 
 
     /* Reposition poor points to nearest good point */
     pcl::KdTreeFLANN<pcl::PointXYZ> rosa_tree;
@@ -592,6 +632,38 @@ void SkelEx::get_vertices() {
         SS.vertices_->points.push_back(pt);
     }
 }
+
+
+void SkelEx::clustering() {
+    SS.clusters.clear();
+    int min_cluster_size = 10;
+    int max_cluster_size = 30;
+    std::vector<bool> visited(pcd_size_, false);
+    
+    for (int i=0; i<pcd_size_; ++i) {
+        if (visited[i]) continue;
+
+        std::vector<int> cluster;
+        std::queue<int> q;
+        q.push(i);
+        visited[i] = true;
+        while (!q.empty()) {
+            int current = q.front();
+            q.pop();
+            cluster.push_back(current);
+            for (int nb : SS.neighs[current]) {
+                if (!visited[nb]) {
+                    visited[nb] = true;
+                    q.push(nb);
+                }
+            }
+        }
+        if (cluster.size() >= min_cluster_size) {
+            SS.clusters.push_back(cluster);
+        }
+    }
+}
+
 
 
 /* Helper Functions */

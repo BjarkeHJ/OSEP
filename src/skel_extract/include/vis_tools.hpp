@@ -20,6 +20,7 @@ public:
 
     void publish_cloud_debug(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, std::string &frame_id);
 
+    void publish_clusters(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string &frame_id);
 
 private:
     rclcpp::Node::SharedPtr node_;
@@ -28,6 +29,9 @@ private:
     
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr debug_pub_;
 
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cluster_pub_;
+
+    
 };  
 
 

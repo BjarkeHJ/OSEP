@@ -10,6 +10,7 @@ VisTools::VisTools(rclcpp::Node::SharedPtr node) : node_(node) {
     pcd_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/pointcloud_repub", 10);
     nrm_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("/surface_normals", 10);
     debug_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/debugger_01", 10);
+    cluster_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/clusters", 10);
 }
 
 
@@ -69,4 +70,13 @@ void VisTools::publish_cloud_debug(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, st
     cloud_msg.header.frame_id = frame_id;
     cloud_msg.header.stamp = node_->now();
     debug_pub_->publish(cloud_msg);
+}
+
+
+void VisTools::publish_clusters(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string &frame_id) {
+    sensor_msgs::msg::PointCloud2 cloud_msg;
+    pcl::toROSMsg(*cloud, cloud_msg);
+    cloud_msg.header.frame_id = frame_id;
+    cloud_msg.header.stamp = node_->now();
+    cluster_pub_->publish(cloud_msg);
 }
