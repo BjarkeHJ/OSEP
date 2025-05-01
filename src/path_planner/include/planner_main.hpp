@@ -45,37 +45,66 @@ struct UnionFind {
     }
 };
 
+struct DronePose {
+    Eigen::Vector3d position;
+    Eigen::Quaterniond orientation;
+};
+
 struct GlobalSkeleton {
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices_cloud;
+    std::vector<SkeletonVertex> prelim_vertices;
     std::vector<SkeletonVertex> global_vertices;
+
+    std::vector<int> joints;
+    std::vector<int> leafs;
 
     std::vector<std::vector<int>> global_adj;
     std::vector<bool> visited;
+};
+
+struct GlobalPath {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_waypoints; // Include the history of waypoints (incremental)
+    pcl::PointCloud<pcl::PointXYZ>::Ptr current_waypoints; // Local waypoints (what is being published)
+
 };
 
 class PathPlanner {
 public:
     PathPlanner(rclcpp::Node::SharedPtr node);
     void init();
-    void main();
+    void plan_path();
     void update_skeleton();
-    void graph_adj();
-    void mst();
-    void clean_skeleton_graph();
-    void select_waypoint();
+    
 
     /* Data */
     GlobalSkeleton GS;
+    GlobalPath GP;
     
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_pts;
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_vertices;
+
+    DronePose pose;
 
 private:
     rclcpp::Node::SharedPtr node_;
 
     /* Functions */
+    void skeleton_increment(); // Increment global skeleton using LKF
+    void graph_adj();
+    void mst();
+
+    void graph_decomp();
+    void vertex_merge();
+    void prune_branches();
+
+    void clean_skeleton_graph();
     
+    
+    void select_waypoint();
+
+
+
     /* Data */
     pcl::KdTreeFLANN<pcl::PointXYZ> gskel_tree;
 
@@ -85,11 +114,6 @@ private:
     double fuse_conf_th = 0.5;
     double kf_pn = 0.0001;
     double kf_mn = 0.1;
-
-
-
-
-    double fuse_alpha = 0.5;
 };
 
 #endif //PLANNER_MAIN_

@@ -16,14 +16,16 @@ find_package(pcl_conversions REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 # Dependencies list
 set(dependencies
     rclcpp
+    pcl_conversions
     sensor_msgs
     visualization_msgs
     geometry_msgs
-    pcl_conversions)
+    nav_msgs)
 
 # Other libraries
 find_package(Eigen3 REQUIRED)

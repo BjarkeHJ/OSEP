@@ -34,8 +34,9 @@ void SkelEx::main() {
     distance_filter();
     pcd_size_ = SS.pts_->points.size();
     
-    if (pcd_size_ < static_cast<int>(std::floor(max_points * 0.8))) {
-        RCLCPP_INFO(node_->get_logger(), "Not enough points to safely compute... Size: %d", pcd_size_);
+    int pts_lim = static_cast<int>(std::floor(max_points*0.8));
+    if (pcd_size_ < pts_lim) {
+        RCLCPP_INFO(node_->get_logger(), "Not enough points to safely compute... Size: %d / %d", pcd_size_, pts_lim);
         return;
     }
     RCLCPP_INFO(node_->get_logger(), "Point Cloud Size: %d", pcd_size_);
@@ -160,7 +161,7 @@ void SkelEx::normal_estimation() {
     //     SS.pts_->points[i].z = (SS.pts_->points[i].z - centroid(2)) / norm_scale;
     // }
 
-    // Surface Normal Estimation 
+    // Surface Normal Estimation
     pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
     pcl::search::KdTree<pcl::PointXYZ>::Ptr ne_tree(new pcl::search::KdTree<pcl::PointXYZ>);
     ne.setInputCloud(SS.pts_);
@@ -634,6 +635,8 @@ void SkelEx::get_vertices() {
     for (int i=0; i<(int)SS.skelver.rows(); ++i) {
         Eigen::Vector3d ver_tf = SS.skelver.row(i);
         ver_tf = tf_rot * ver_tf + tf_trans;
+        if (ver_tf(2) < gnd_th) continue; //skip vertices close to ground...
+
         pt.x = ver_tf(0);
         pt.y = ver_tf(1);
         pt.z = ver_tf(2);

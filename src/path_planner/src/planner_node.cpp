@@ -12,6 +12,7 @@ Path Planner Node
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -26,7 +27,11 @@ public:
     void init();
     void pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg);
     void vertex_callback(const sensor_msgs::msg::PointCloud2::SharedPtr vertex_msg);
+    void odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_msg);
+
     void publish_gskel();
+    void publish_waypoints();
+
     void run();
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pcd_sub_;
@@ -34,21 +39,31 @@ public:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr gskel_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr adj_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr wayp_pub_;
+
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+
+    // rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr wayp_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr wayp_pub_;
+    
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr gskel_timer_;
+    rclcpp::TimerBase::SharedPtr waypoints_timer_;
     
 private:
 
     std::shared_ptr<PathPlanner> planner;
 
-    bool run_flag = false;
+    bool update_skeleton_flag = false;
     int run_timer_ms = 50;
     int gskel_timer_ms = 50;
+    int waypoints_timer_ms = 50;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices;
 
     pcl::VoxelGrid<pcl::PointXYZ> vgf_ds;
+
+    Eigen::Vector3d position;
+    Eigen::Quaterniond orientation;
 
     // std::string global_frame_id = "World";
     std::string global_frame_id = "odom";
@@ -63,11 +78,14 @@ void PlannerNode::init() {
     gskel_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_skeleton", 10);
     adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/adjacency_graph", 10);
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_points", 10);
-    wayp_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/next_waypoint", 10);
+
+    // wayp_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/next_waypoint", 10);
+    wayp_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/next_waypoint", 10);
+    odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
     gskel_timer_ = this->create_wall_timer(std::chrono::milliseconds(gskel_timer_ms), std::bind(&PlannerNode::publish_gskel, this));
-
+    waypoints_timer_ = this->create_wall_timer(std::chrono::milliseconds(waypoints_timer_ms), std::bind(&PlannerNode::publish_waypoints, this));
 
     /* Params */
     // Stuff from launch file (ToDo)...
@@ -108,8 +126,24 @@ void PlannerNode::vertex_callback(const sensor_msgs::msg::PointCloud2::SharedPtr
     }
     pcl::fromROSMsg(*vertex_msg, *vertices);
     planner->local_vertices = vertices;
-    run_flag = true;
+    update_skeleton_flag = true;
 }
+
+void PlannerNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_msg) {
+    if (!odom_msg) {
+        RCLCPP_INFO(this->get_logger(), "Did not recieve drone odometry data");
+    }
+    position(0) = odom_msg->pose.pose.position.x;
+    position(1) = odom_msg->pose.pose.position.y;
+    position(2) = odom_msg->pose.pose.position.z;
+    
+    orientation.w() = odom_msg->pose.pose.orientation.w;
+    orientation.x() = odom_msg->pose.pose.orientation.x;
+    orientation.y() = odom_msg->pose.pose.orientation.y;
+    orientation.z() = odom_msg->pose.pose.orientation.z;
+}
+
+
 
 void PlannerNode::publish_gskel() {
     if (planner->GS.global_vertices_cloud && !planner->GS.global_vertices_cloud->empty()) {
@@ -158,15 +192,34 @@ void PlannerNode::publish_gskel() {
     else RCLCPP_INFO(this->get_logger(), "WARNING: No Global Skeleton Available");
 }
 
+void PlannerNode::publish_waypoints() {
+    if (!planner->GP.current_waypoints || planner->GP.current_waypoints->empty()) {
+        RCLCPP_INFO(this->get_logger(), "No Current Waypoints!");
+        return;
+    }
+
+    sensor_msgs::msg::PointCloud2 wayp_msg;
+    pcl::toROSMsg(*planner->GP.current_waypoints, wayp_msg);
+    wayp_msg.header.frame_id = global_frame_id;
+    wayp_msg.header.stamp = now();
+    wayp_pub_->publish(wayp_msg);
+}
+
+
+
 void PlannerNode::run() {
-    // Change update logic to:
+    // Changed update logic to:
     // If new vertices -> Update skeleton
     // If no new vertices -> Still perform refinements and path planning computations etc...
 
-    if (run_flag) {
-        run_flag = false;
-        planner->main();
+    if (update_skeleton_flag) {
+        update_skeleton_flag = false;
+        planner->update_skeleton();
     }
+
+    // No matter if new vertices arrived: Plan and refine the current path!
+    planner->pose = {position, orientation};
+    planner->plan_path();
 }
 
 int main(int argc, char** argv) {

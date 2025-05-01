@@ -17,7 +17,6 @@ public:
         
         sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(pcd_sub_topic, 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
         pub_ = create_publisher<sensor_msgs::msg::PointCloud2>(pcd_pub_topic, 10);
-        // sub_ = create_subscription<sensor_msgs::msg::PointCloud2>("/isaac/point_cloud_0", 10, std::bind(&LidarPublisher::publishPointCloud, this, std::placeholders::_1));
     }
 
 private:
