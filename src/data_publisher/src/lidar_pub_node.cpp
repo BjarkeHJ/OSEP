@@ -29,7 +29,9 @@ private:
         pcd_msg->header.frame_id = local_frame_id;
         // pcd_msg->header.stamp = this->now();
         pcd_msg->header.stamp = pcd_msg->header.stamp;
+        size_t num_pts = pcd_msg->width * pcd_msg->height;
         pub_->publish(*pcd_msg);
+        RCLCPP_INFO(this->get_logger(), "Published Point Cloud - Size: %zu", num_pts);
     }
 
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_;

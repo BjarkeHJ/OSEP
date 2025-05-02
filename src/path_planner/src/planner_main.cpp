@@ -533,7 +533,7 @@ Viewpoint PathPlanner::generate_viewpoint(int id, int id_next) {
     double yaw = std::atan2(vp_ori.y(), vp_ori.x());
     Eigen::AngleAxisd yaw_rot(yaw, Eigen::Vector3d::UnitZ());
 
-    vp.posisiton = vp_pos;
+    vp.position = vp_pos;
     vp.orientation = Eigen::Quaterniond(yaw_rot);
 
     return vp;

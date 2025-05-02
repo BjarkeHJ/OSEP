@@ -63,7 +63,7 @@ struct DronePose {
 };
 
 struct Viewpoint {
-    Eigen::Vector3d posisiton;
+    Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
     bool visited = false;
 };

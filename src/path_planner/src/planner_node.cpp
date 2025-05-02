@@ -192,7 +192,7 @@ void PlannerNode::publish_gskel() {
 }
 
 void PlannerNode::publish_viewpoints() {
-    if (!planner->GP.current_waypoints || planner->GP.current_waypoints->empty()) {
+    if (planner->GP.local_vpts.empty()) {
         RCLCPP_INFO(this->get_logger(), "No Current Waypoints!");
         return;
     }
@@ -206,9 +206,9 @@ void PlannerNode::publish_viewpoints() {
         geometry_msgs::msg::PoseStamped pose_msg;
         pose_msg.header = path_msg.header;
 
-        pose_msg.pose.position.x = vp.posisiton.x();
-        pose_msg.pose.position.y = vp.posisiton.y();
-        pose_msg.pose.position.z = vp.posisiton.z();
+        pose_msg.pose.position.x = vp.position.x();
+        pose_msg.pose.position.y = vp.position.y();
+        pose_msg.pose.position.z = vp.position.z();
 
         pose_msg.pose.orientation.x = vp.orientation.x();
         pose_msg.pose.orientation.y = vp.orientation.y();
