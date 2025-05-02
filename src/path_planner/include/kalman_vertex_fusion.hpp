@@ -3,14 +3,14 @@
 
 #include <Eigen/Core>
 
-struct SkeletonVertex {
-    Eigen::Vector3d position;
-    Eigen::Matrix3d covariance;
-    int obs_count = 0;
-    int unconfirmed_check = 0;
-    bool conf_check = false;
-    bool frozen = false;
-};
+// struct SkeletonVertex {
+//     Eigen::Vector3d position;
+//     Eigen::Matrix3d covariance;
+//     int obs_count = 0;
+//     int unconfirmed_check = 0;
+//     bool conf_check = false;
+//     bool frozen = false;
+// };
 
 class VertexLKF {
 public: 

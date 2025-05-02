@@ -4,6 +4,7 @@
 #include "kalman_vertex_fusion.hpp"
 
 #include <algorithm>
+#include <queue>
 #include <rclcpp/rclcpp.hpp>
 #include <pcl/common/common.h>
 #include <pcl/kdtree/kdtree_flann.h>
@@ -45,9 +46,26 @@ struct UnionFind {
     }
 };
 
+struct SkeletonVertex {
+    Eigen::Vector3d position;
+    Eigen::Matrix3d covariance;
+    int obs_count = 0;
+    int unconfirmed_check = 0;
+    bool conf_check = false;
+    int type = 0; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
+    int visited_cnt = 0; // Used for viewpoint generation #
+    int invalid = false; // If no proper viewpoint can be generated??
+};
+
 struct DronePose {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
+};
+
+struct Viewpoint {
+    Eigen::Vector3d posisiton;
+    Eigen::Quaterniond orientation;
+    bool visited = false;
 };
 
 struct GlobalSkeleton {
@@ -60,13 +78,15 @@ struct GlobalSkeleton {
     std::vector<int> leafs;
 
     std::vector<std::vector<int>> global_adj;
-    std::vector<bool> visited;
 };
 
 struct GlobalPath {
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_waypoints; // Include the history of waypoints (incremental)
     pcl::PointCloud<pcl::PointXYZ>::Ptr current_waypoints; // Local waypoints (what is being published)
 
+    int curr_id;
+    std::vector<Viewpoint> global_vpts;
+    std::queue<Viewpoint> local_vpts;
 };
 
 class PathPlanner {
@@ -76,7 +96,6 @@ public:
     void plan_path();
     void update_skeleton();
     
-
     /* Data */
     GlobalSkeleton GS;
     GlobalPath GP;
@@ -89,24 +108,20 @@ public:
 private:
     rclcpp::Node::SharedPtr node_;
 
-    /* Functions */
-    void skeleton_increment(); // Increment global skeleton using LKF
+    /* Updating Skeleton */
+    void skeleton_increment();
     void graph_adj();
     void mst();
-
-    void graph_decomp();
     void vertex_merge();
-    void prune_branches();
-
-    void clean_skeleton_graph();
+    void prune_branches();    
+    void graph_decomp();
     
-    
-    void select_waypoint();
-
-
+    /* Waypoint Generation and PathPlanning*/
+    void select_viewpoints();
+    Viewpoint generate_viewpoint(int id, int id_next);
+    int find_next_toward_furthest_leaf(int start_id);
 
     /* Data */
-    pcl::KdTreeFLANN<pcl::PointXYZ> gskel_tree;
 
     /* Params */
     int max_obs_wo_conf = 3; // Maximum number of iters without passing conf check before discarding...

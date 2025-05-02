@@ -12,6 +12,7 @@ Path Planner Node
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <nav_msgs/msg/path.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
 #include <pcl/filters/voxel_grid.h>
@@ -30,7 +31,7 @@ public:
     void odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_msg);
 
     void publish_gskel();
-    void publish_waypoints();
+    void publish_viewpoints();
 
     void run();
 
@@ -42,12 +43,11 @@ public:
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
-    // rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr wayp_pub_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr wayp_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr viewpoint_pub_;
     
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr gskel_timer_;
-    rclcpp::TimerBase::SharedPtr waypoints_timer_;
+    rclcpp::TimerBase::SharedPtr viewpoints_timer_;
     
 private:
 
@@ -56,7 +56,7 @@ private:
     bool update_skeleton_flag = false;
     int run_timer_ms = 50;
     int gskel_timer_ms = 50;
-    int waypoints_timer_ms = 50;
+    int viewpoints_timer_ms = 50;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices;
 
@@ -79,13 +79,12 @@ void PlannerNode::init() {
     adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/adjacency_graph", 10);
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_points", 10);
 
-    // wayp_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/next_waypoint", 10);
-    wayp_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/next_waypoint", 10);
+    viewpoint_pub_ = this->create_publisher<nav_msgs::msg::Path>("/next_waypoint", 10);
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
     gskel_timer_ = this->create_wall_timer(std::chrono::milliseconds(gskel_timer_ms), std::bind(&PlannerNode::publish_gskel, this));
-    waypoints_timer_ = this->create_wall_timer(std::chrono::milliseconds(waypoints_timer_ms), std::bind(&PlannerNode::publish_waypoints, this));
+    viewpoints_timer_ = this->create_wall_timer(std::chrono::milliseconds(viewpoints_timer_ms), std::bind(&PlannerNode::publish_viewpoints, this));
 
     /* Params */
     // Stuff from launch file (ToDo)...
@@ -192,17 +191,34 @@ void PlannerNode::publish_gskel() {
     else RCLCPP_INFO(this->get_logger(), "WARNING: No Global Skeleton Available");
 }
 
-void PlannerNode::publish_waypoints() {
+void PlannerNode::publish_viewpoints() {
     if (!planner->GP.current_waypoints || planner->GP.current_waypoints->empty()) {
         RCLCPP_INFO(this->get_logger(), "No Current Waypoints!");
         return;
     }
+    nav_msgs::msg::Path path_msg;
+    path_msg.header.frame_id = global_frame_id;
+    path_msg.header.stamp = now();
 
-    sensor_msgs::msg::PointCloud2 wayp_msg;
-    pcl::toROSMsg(*planner->GP.current_waypoints, wayp_msg);
-    wayp_msg.header.frame_id = global_frame_id;
-    wayp_msg.header.stamp = now();
-    wayp_pub_->publish(wayp_msg);
+    std::queue<Viewpoint> queue_copy = planner->GP.local_vpts;
+    while (!queue_copy.empty()) {
+        const Viewpoint& vp = queue_copy.front();
+        geometry_msgs::msg::PoseStamped pose_msg;
+        pose_msg.header = path_msg.header;
+
+        pose_msg.pose.position.x = vp.posisiton.x();
+        pose_msg.pose.position.y = vp.posisiton.y();
+        pose_msg.pose.position.z = vp.posisiton.z();
+
+        pose_msg.pose.orientation.x = vp.orientation.x();
+        pose_msg.pose.orientation.y = vp.orientation.y();
+        pose_msg.pose.orientation.z = vp.orientation.z();
+        pose_msg.pose.orientation.w = vp.orientation.w();
+    
+        path_msg.poses.push_back(pose_msg);
+        queue_copy.pop();
+    }
+    viewpoint_pub_->publish(path_msg);
 }
 
 

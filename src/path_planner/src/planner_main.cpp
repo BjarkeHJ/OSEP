@@ -27,13 +27,19 @@ void PathPlanner::init() {
 
     GP.global_waypoints.reset(new pcl::PointCloud<pcl::PointXYZ>);
     GP.current_waypoints.reset(new pcl::PointCloud<pcl::PointXYZ>);
+
+    GP.curr_id = -1;
 }
 
 void PathPlanner::plan_path() {
     auto t_start = std::chrono::high_resolution_clock::now();
     
     // RUN GENERAL PATH PLANNING SELECTION ECT...
-    select_waypoint();
+    
+    // Manage adjusted points with a flag
+    // if adjust_flag: -> adjusted points are recieved and 
+    
+    select_viewpoints();
     
     // update_skeleton();
     // graph_adj();
@@ -63,7 +69,6 @@ void PathPlanner::update_skeleton() {
 
 
 /* Skeleton Updateing*/
-
 void PathPlanner::skeleton_increment() {
     if (!local_vertices || local_vertices->empty()) {
         RCLCPP_INFO(node_->get_logger(), "No New Vertices...");
@@ -120,7 +125,7 @@ void PathPlanner::skeleton_increment() {
     }
 
     // Delete points that did not pass the confidence check (reverse indexing for id consistency)
-    for (auto it = to_delete_indices.rbegin(); it != to_delete_indices.rend(); ++it) {
+    for (auto it = ids_to_delete.rbegin(); it != ids_to_delete.rend(); ++it) {
         GS.prelim_vertices.erase(GS.prelim_vertices.begin() + *it);
     }
 
@@ -271,6 +276,8 @@ void PathPlanner::vertex_merge() {
                     (GS.global_vertices[i].position * obs_i + GS.global_vertices[j].position * obs_j) / total_obs;
                 GS.global_vertices[i].obs_count = total_obs;
 
+                GS.global_vertices[i].visited_cnt = std::max(GS.global_vertices[i].visited_cnt, GS.global_vertices[j].visited_cnt);
+
                 // Merge neighbors of j into i
                 for (int neighbor : GS.global_adj[j]) {
                     if (neighbor != i &&
@@ -399,79 +406,227 @@ void PathPlanner::prune_branches() {
 }
 
 void PathPlanner::graph_decomp() {
-    /* Called various places to update the decomp... */
+    /* Assigns vertex type */
     GS.joints.clear();
     GS.leafs.clear();
 
     for (int i=0; i<(int)GS.global_adj.size(); ++i) {
         int degree = GS.global_adj[i].size();
+
         if (degree == 1) {
             GS.leafs.push_back(i);
+            GS.global_vertices[i].type = 1;
         }
+
+        if (degree == 2) {
+            GS.global_vertices[i].type = 2;
+        }
+
         if (degree >= 2) {
             GS.joints.push_back(i);
+            GS.global_vertices[i].type = 3;
+        }
+
+        else {
+            GS.global_vertices[i].type = 0;
         }
     }
 }
 
 /* Viewpoint Generation and Path Planning */
-
-void PathPlanner::select_waypoint() {
+void PathPlanner::select_viewpoints() {
     if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
 
-    GP.current_waypoints->clear();
-    const int K_ver = 2;
-    double disp_dist = 10;
+    // need a early return for few vertices (2)??
 
-    pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
-    vertex_tree.setInputCloud(GS.global_vertices_cloud);
-
-    const pcl::PointXYZ pos(pose.position(0), pose.position(1), pose.position(2));
-    std::vector<int> indices;
-    std::vector<float> sq_dists;
-
-    if (vertex_tree.nearestKSearch(pos, K_ver, indices, sq_dists) <= 1) {
-        RCLCPP_INFO(node_->get_logger(), "Did not find enough vertices to plan path...");
-        return;
+    if (GP.curr_id == -1) {
+        /* Initialize Planning (First Waypoint) */
+        pcl::PointXYZ dpos(pose.position(0), pose.position(1), pose.position(2));
+        pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
+        vertex_tree.setInputCloud(GS.global_vertices_cloud);
+        std::vector<int> id(1);
+        std::vector<float> sq_dist(1);
+        if (vertex_tree.nearestKSearch(dpos, 1, id, sq_dist) < 1) {
+            RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Did not find a vertex");
+            return;
+        }
+        GP.curr_id = id[0];
     }
-    // Check if the vertices are connected in the graph!
-    // Check if vertices are marked visited
 
+    if (GS.global_vertices[GP.curr_id].type != 1) {
+        int k_wpts = 5;
+        while ((int)GP.local_vpts.size() <= k_wpts) {
+            auto& current_ver = GS.global_vertices[GP.curr_id];
+            int next_id = -1;
+
+            // invalid point
+            if (current_ver.type == 0) {
+                RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Current Vertice Invalid!");
+                return;
+            }
+
+            if (current_ver.type == 1) {
+                RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Fly to leaf...");
+                return;
+            }
+
+            if (current_ver.type == 2) {
+                std::vector<int> nbs_ids = GS.global_adj[GP.curr_id];
+                int vis = 100; // arbitrary large int
+                for (int id : nbs_ids) {
+                    if (GS.global_vertices[id].visited_cnt < vis) {
+                        vis = GS.global_vertices[id].visited_cnt;
+                        next_id = id;
+                    }
+                }
+            }
+
+            if (current_ver.type == 3) {
+                int temp = find_next_toward_furthest_leaf(GP.curr_id);
+                if (temp != -1) {
+                    next_id = temp;
+                }
+                else {
+                    RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] No path to unvisited leaves from junction.");
+                }
+            }
+
+            Viewpoint next_wp = generate_viewpoint(GP.curr_id, next_id); // Define new viewpoint (set position and orientation)
+
+            GP.local_vpts.push(next_wp);
+            GP.curr_id = next_id;
+        }
+    }
+}
+
+Viewpoint PathPlanner::generate_viewpoint(int id, int id_next) {
+    Viewpoint vp;
     Eigen::Vector3d u;
-    const Eigen::Vector3d p1 = GS.global_vertices[indices[0]].position;
-    const Eigen::Vector3d p2 = GS.global_vertices[indices[1]].position;
+    double disp_dist = 10.0;
+
+    const Eigen::Vector3d p1 = GS.global_vertices[id].position;
+    const Eigen::Vector3d p2 = GS.global_vertices[id_next].position;
     Eigen::Vector3d dir = p2 - p1;
+    if (dir.norm() < 1e-2) return Viewpoint{};
 
-    if (dir.norm() < 1e-2) return;  // Avoid near-zero direction
+    Eigen::Vector2d dir_xy = dir.head<2>();
 
-    Eigen::Vector2d dir_xy = dir.head<2>(); // Direction in xy-plane only
-
-    if (dir_xy.norm() > 0.1) {
-        // Case where points are not only in z-direction (vertical)
+    if (dir_xy.norm() > 0.5) {
         dir_xy.normalize();
         Eigen::Vector3d u1(-dir_xy.y(), dir_xy.x(), 0.0);
         Eigen::Vector3d u2(dir_xy.y(), -dir_xy.x(), 0.0);
         double d1 = (pose.position - (p2 + u1)).squaredNorm();
         double d2 = (pose.position - (p2 + u2)).squaredNorm();
-        u = (d1 < d2) ? u1 : u2; // if d1 < d2 -> u=u1 else u=u2;
+        u = (d1 < d2) ? u1 : u2;
     }
+
     else {
         Eigen::Vector2d to_drone_xy = (pose.position.head<2>() - p2.head<2>());
-        if (to_drone_xy.norm() < 1e-2) return;
+        if (to_drone_xy.norm() < 1e-2) return Viewpoint{};
         to_drone_xy.normalize();
         u = Eigen::Vector3d(to_drone_xy.x(), to_drone_xy.y(), 0.0);
     }
 
-    // Generate and store the waypoint
-    const Eigen::Vector3d wayp = p2 + u * disp_dist;
-    GP.current_waypoints->points.emplace_back(wayp.x(), wayp.y(), wayp.z());
-    GP.current_waypoints->points.emplace_back(pos);
-    for (const auto &id : indices) {
-        GP.current_waypoints->points.emplace_back(GS.global_vertices_cloud->points[id]); // adds the two points
-    }
+    const Eigen::Vector3d vp_pos = p2 + u * disp_dist;
+    const Eigen::Vector3d vp_ori = -u.normalized();
+
+    double yaw = std::atan2(vp_ori.y(), vp_ori.x());
+    Eigen::AngleAxisd yaw_rot(yaw, Eigen::Vector3d::UnitZ());
+
+    vp.posisiton = vp_pos;
+    vp.orientation = Eigen::Quaterniond(yaw_rot);
+
+    return vp;
+}
+
+int PathPlanner::find_next_toward_furthest_leaf(int start_id) {
+    int max_depth = -1;
+    std::vector<int> best_path;
+    std::unordered_set<int> visited;
+    std::vector<int> current_path;
+
+    // Recursive depth first search
+    std::function<void(int, int)> dfs = [&](int v, int depth) {
+        visited.insert(v);
+        current_path.push_back(v);
+        const auto& node = GS.global_vertices[v];
+
+        if (node.type == 1 && node.visited_cnt == 0) {
+            if (depth > max_depth) {
+                max_depth = depth;
+                best_path = current_path;
+            }
+        }
+
+        if (v < (int)GS.global_adj.size()) {
+            for (int nb : GS.global_adj[v]) {
+                if (!visited.count(nb) && GS.global_vertices[nb].visited_cnt == 0) {
+                    dfs(nb, depth + 1);
+                }
+            }
+        }
+
+        current_path.pop_back();
+    };
+
+    dfs(start_id, 0);
+
+    // If a valid path is found and has at least two nodes, return the second node (next step)
+    if (best_path.size() >= 2)
+        return best_path[1];
+
+    return -1;  // No valid next step
 }
 
 
+    // GP.current_waypoints->clear();
+    // const int K_ver = 2;
+    // double disp_dist = 10;
 
-/* Helper Function */
+    // pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
+    // vertex_tree.setInputCloud(GS.global_vertices_cloud);
 
+    // const pcl::PointXYZ pos(pose.position(0), pose.position(1), pose.position(2));
+    // std::vector<int> indices;
+    // std::vector<float> sq_dists;
+
+    // if (vertex_tree.nearestKSearch(pos, K_ver, indices, sq_dists) <= 1) {
+    //     RCLCPP_INFO(node_->get_logger(), "Did not find enough vertices to plan path...");
+    //     return;
+    // }
+
+    // // Check if the vertices are connected in the graph!
+    // // Check if vertices are marked visited
+
+    // Eigen::Vector3d u;
+    // const Eigen::Vector3d p1 = GS.global_vertices[indices[0]].position;
+    // const Eigen::Vector3d p2 = GS.global_vertices[indices[1]].position;
+    // Eigen::Vector3d dir = p2 - p1;
+
+    // if (dir.norm() < 1e-2) return;  // Avoid near-zero direction
+
+    // Eigen::Vector2d dir_xy = dir.head<2>(); // Direction in xy-plane only
+
+    // if (dir_xy.norm() > 0.5) {
+    //     // Case where points are not only in z-direction (vertical)
+    //     dir_xy.normalize();
+    //     Eigen::Vector3d u1(-dir_xy.y(), dir_xy.x(), 0.0);
+    //     Eigen::Vector3d u2(dir_xy.y(), -dir_xy.x(), 0.0);
+    //     double d1 = (pose.position - (p2 + u1)).squaredNorm();
+    //     double d2 = (pose.position - (p2 + u2)).squaredNorm();
+    //     u = (d1 < d2) ? u1 : u2; // if d1 < d2 -> u=u1 else u=u2;
+    // }
+    // else {
+    //     Eigen::Vector2d to_drone_xy = (pose.position.head<2>() - p2.head<2>());
+    //     if (to_drone_xy.norm() < 1e-2) return;
+    //     to_drone_xy.normalize();
+    //     u = Eigen::Vector3d(to_drone_xy.x(), to_drone_xy.y(), 0.0);
+    // }
+
+    // // Generate and store the waypoint
+    // const Eigen::Vector3d wayp = p2 + u * disp_dist;
+    // GP.current_waypoints->points.emplace_back(wayp.x(), wayp.y(), wayp.z());
+    // GP.current_waypoints->points.emplace_back(pos);
+    // for (const auto &id : indices) {
+    //     GP.current_waypoints->points.emplace_back(GS.global_vertices_cloud->points[id]); // adds the two points
+    // }
