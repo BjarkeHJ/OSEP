@@ -62,6 +62,8 @@ void PathPlanner::update_skeleton() {
 }
 
 
+/* Skeleton Updateing*/
+
 void PathPlanner::skeleton_increment() {
     if (!local_vertices || local_vertices->empty()) {
         RCLCPP_INFO(node_->get_logger(), "No New Vertices...");
@@ -70,10 +72,15 @@ void PathPlanner::skeleton_increment() {
 
     RCLCPP_INFO(node_->get_logger(), "Updating Global Skeleton...");
 
+    std::vector<int> ids_to_delete;
+
     for (auto &pt : local_vertices->points) {
         Eigen::Vector3d ver(pt.x, pt.y, pt.z);
         bool matched = false;
-        for (auto &gver : GS.prelim_vertices) {
+
+        // for (auto &gver : GS.prelim_vertices) {
+        for (int i=0; i<(int)GS.prelim_vertices.size(); ++i) {
+            auto &gver = GS.prelim_vertices[i];
             double sq_dist = (gver.position - ver).squaredNorm();
             if (sq_dist < fuse_dist_th*fuse_dist_th) {
                 VertexLKF kf(kf_pn, kf_mn);
@@ -92,10 +99,9 @@ void PathPlanner::skeleton_increment() {
                     gver.unconfirmed_check++;
                 }
                 
-
-                // This logic does not hold!!! It will continously occupy the space but never insert a vertice!....
+                // Mark ids as invalid and schedule for removal...
                 if (gver.unconfirmed_check > max_obs_wo_conf) {
-                    continue;
+                    ids_to_delete.push_back(i);
                 }
 
                 matched = true;
@@ -113,7 +119,12 @@ void PathPlanner::skeleton_increment() {
         }
     }
 
-    // Select only confident vertices
+    // Delete points that did not pass the confidence check (reverse indexing for id consistency)
+    for (auto it = to_delete_indices.rbegin(); it != to_delete_indices.rend(); ++it) {
+        GS.prelim_vertices.erase(GS.prelim_vertices.begin() + *it);
+    }
+
+    // Pass confident vertices to the global skeleton...
     GS.global_vertices_cloud->clear();
     GS.global_vertices.clear();
     for (auto &gver : GS.prelim_vertices) {
@@ -387,130 +398,23 @@ void PathPlanner::prune_branches() {
     graph_decomp();
 }
 
+void PathPlanner::graph_decomp() {
+    /* Called various places to update the decomp... */
+    GS.joints.clear();
+    GS.leafs.clear();
 
-
-void PathPlanner::clean_skeleton_graph() {
-    if (GS.global_vertices.empty() || GS.global_adj.empty()) {
-        RCLCPP_WARN(node_->get_logger(), "Cannot clean an empty graph.");
-        return;
-    }
-    int N_ver = GS.global_vertices.size();
-
-    if (N_ver < 5 && GS.joints.size() == 0) return; // Allow skeleton to build up
-
-    const int min_branch_nodes = 3;
-    const int smooth_iter = 1;
-    RCLCPP_INFO(node_->get_logger(), "Cleaning skeleton: pruning and smoothing...");
-
-    // --- Step 1: Mark small branches for removal ---
-    std::vector<bool> visited(N_ver, false);
-    std::vector<bool> to_keep(N_ver, true); // assume keeping all initially
-
-    for (int i = 0; i < N_ver; ++i) {
-        if (!visited[i] && GS.global_adj[i].size() == 1) {
-            std::vector<int> branch;
-            int current = i, prev = -1;
-
-            // Walk from leaf node to junction or termination
-            while (true) {
-                visited[current] = true;
-                branch.push_back(current);
-
-                if (GS.global_adj[current].empty()) break;
-
-                int next = -1;
-                for (int nb : GS.global_adj[current]) {
-                    if (nb != prev) {
-                        next = nb;
-                        break;
-                    }
-                }
-
-                if (next == -1 || GS.global_adj[current].size() > 2) break;
-
-                prev = current;
-                current = next;
-            }
-
-            if ((int)branch.size() < min_branch_nodes) {
-                for (int idx : branch) to_keep[idx] = false;
-            }
+    for (int i=0; i<(int)GS.global_adj.size(); ++i) {
+        int degree = GS.global_adj[i].size();
+        if (degree == 1) {
+            GS.leafs.push_back(i);
+        }
+        if (degree >= 2) {
+            GS.joints.push_back(i);
         }
     }
-
-    // --- Step 2: Remap indices and filter vertices and edges ---
-    std::vector<int> old_to_new(GS.global_vertices.size(), -1);
-    std::vector<SkeletonVertex> new_vertices;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr new_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    std::vector<std::vector<int>> new_adj;
-
-    for (size_t i = 0; i < to_keep.size(); ++i) {
-        if (to_keep[i]) {
-            int new_idx = (int)new_vertices.size();
-            old_to_new[i] = new_idx;
-
-            new_vertices.push_back(GS.global_vertices[i]);
-            new_cloud->points.emplace_back(GS.global_vertices_cloud->points[i]);
-            new_adj.emplace_back();
-        }
-    }
-
-    for (size_t i = 0; i < to_keep.size(); ++i) {
-        if (!to_keep[i]) continue;
-
-        int new_idx = old_to_new[i];
-        for (int nb : GS.global_adj[i]) {
-            if (to_keep[nb]) {
-                int new_nb = old_to_new[nb];
-                new_adj[new_idx].push_back(new_nb);
-            }
-        }
-    }
-
-    int pruned_count = (int)GS.global_vertices.size() - (int)new_vertices.size();
-    RCLCPP_INFO(node_->get_logger(), "Removed %d vertices from pruned branches.", pruned_count);
-
-    // --- Step 3: Smoothing (on remaining vertices) ---
-    for (int iter = 0; iter < smooth_iter; ++iter) {
-        std::vector<Eigen::Vector3f> new_positions(new_cloud->size());
-
-        for (size_t i = 0; i < new_cloud->size(); ++i) {
-            if (new_adj[i].empty()) {
-                new_positions[i] = new_cloud->points[i].getVector3fMap();
-                continue;
-            }
-
-            Eigen::Vector3f avg = new_cloud->points[i].getVector3fMap();
-            float total_weight = 1.0f;
-
-            for (int nb : new_adj[i]) {
-                Eigen::Vector3f diff = new_cloud->points[nb].getVector3fMap() - new_cloud->points[i].getVector3fMap();
-                float dist = diff.norm();
-                float w = std::exp(-dist * dist); // Gaussian-like
-                avg += w * new_cloud->points[nb].getVector3fMap();
-                total_weight += w;
-            }
-
-            new_positions[i] = avg / total_weight;
-        }
-
-        for (size_t i = 0; i < new_cloud->size(); ++i) {
-            new_cloud->points[i].x = new_positions[i].x();
-            new_cloud->points[i].y = new_positions[i].y();
-            new_cloud->points[i].z = new_positions[i].z();
-            new_vertices[i].position = new_positions[i].cast<double>();
-        }
-    }
-
-    // --- Step 4: Replace global skeleton ---
-    GS.global_vertices = std::move(new_vertices);
-    GS.global_vertices_cloud = new_cloud;
-    GS.global_adj = std::move(new_adj);
-
-    RCLCPP_INFO(node_->get_logger(), "Skeleton cleaning complete.");
 }
 
-
+/* Viewpoint Generation and Path Planning */
 
 void PathPlanner::select_waypoint() {
     if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
@@ -571,17 +475,3 @@ void PathPlanner::select_waypoint() {
 
 /* Helper Function */
 
-void PathPlanner::graph_decomp() {
-    GS.joints.clear();
-    GS.leafs.clear();
-
-    for (int i=0; i<(int)GS.global_adj.size(); ++i) {
-        int degree = GS.global_adj[i].size();
-        if (degree == 1) {
-            GS.leafs.push_back(i);
-        }
-        if (degree >= 2) {
-            GS.joints.push_back(i);
-        }
-    }
-}
