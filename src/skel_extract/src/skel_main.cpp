@@ -109,20 +109,21 @@ void SkelEx::distance_filter() {
     ptf.setFilterLimits(-pts_dist_lim, pts_dist_lim);
     ptf.filter(*SS.pts_);
 
-    Eigen::Vector3f ref_pt = Eigen::Vector3f::Zero();
-
+    
     // Step 2: Euclidean Clustering
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-    tree->setInputCloud(temp_cloud);
 
-    std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance(1.0); // Adjust based on point spacing
-    ec.setMinClusterSize(100);
-    ec.setMaxClusterSize(10000);
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(temp_cloud);
-    ec.extract(cluster_indices);
+    // Eigen::Vector3f ref_pt = Eigen::Vector3f::Zero();
+    // pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+    // tree->setInputCloud(temp_cloud);
+
+    // std::vector<pcl::PointIndices> cluster_indices;
+    // pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+    // ec.setClusterTolerance(1.0); // Adjust based on point spacing
+    // ec.setMinClusterSize(100);
+    // ec.setMaxClusterSize(10000);
+    // ec.setSearchMethod(tree);
+    // ec.setInputCloud(temp_cloud);
+    // ec.extract(cluster_indices);
 
     // Step 3: Find the cluster closest to the reference point
     // float min_dist = std::numeric_limits<float>::max();

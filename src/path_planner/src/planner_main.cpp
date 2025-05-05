@@ -223,9 +223,10 @@ void PathPlanner::smooth_vertex_positions() {
         for (int j : nbrs) {
             avg += GS.global_vertices[j].position;
         }
+
         avg /= static_cast<double>(nbrs.size());
 
-        double blend = 0.9;
+        double blend = 0.8;
         new_positions[i] = (1.0 - blend) * v.position + blend * avg;
     }
 
@@ -286,7 +287,7 @@ void PathPlanner::mst() {
             if (count > 0) smooth_dir.normalize();
 
             // Penalize direction changes
-            double angle_penalty = 5.0;
+            double angle_penalty = 10.0;
             if (count > 0) {
                 double dot = dir.dot(smooth_dir);
                 angle_penalty = 1.0 + (1.0 - dot);  // favors alignment (dot=1)

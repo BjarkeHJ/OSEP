@@ -110,7 +110,7 @@ void PlannerNode::pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cl
     *(planner->GS.global_pts) += *cloud;
 
     vgf_ds.setInputCloud(planner->GS.global_pts);
-    vgf_ds.setLeafSize(2.0, 2.0, 2.0);
+    vgf_ds.setLeafSize(1.0, 1.0, 1.0);
     vgf_ds.filter(*planner->GS.global_pts);
 
     sensor_msgs::msg::PointCloud2 output_msg;
