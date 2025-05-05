@@ -51,12 +51,14 @@ public:
     
 private:
 
+    std::string topic_prefix = "/osep";
+
     std::shared_ptr<PathPlanner> planner;
 
     bool update_skeleton_flag = false;
     int run_timer_ms = 50;
     int gskel_timer_ms = 50;
-    int viewpoints_timer_ms = 50;
+    int viewpoints_timer_ms = 500;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices;
 
@@ -73,18 +75,18 @@ void PlannerNode::init() {
     RCLCPP_INFO(this->get_logger(), "Initializing Modules and Data Structures...");
 
     /* Subscriber, Publishers, Timers, etc... */
-    pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/local_points", 10, std::bind(&PlannerNode::pcd_callback, this, std::placeholders::_1));
-    vertex_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/local_vertices", 10, std::bind(&PlannerNode::vertex_callback, this, std::placeholders::_1));
-    gskel_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_skeleton", 10);
-    adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/adjacency_graph", 10);
-    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/global_points", 10);
+    pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic_prefix+"/local_points", 10, std::bind(&PlannerNode::pcd_callback, this, std::placeholders::_1));
+    vertex_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic_prefix+"/local_vertices", 10, std::bind(&PlannerNode::vertex_callback, this, std::placeholders::_1));
+    gskel_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_skeleton", 10);
+    adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(topic_prefix+"/adjacency_graph", 10);
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_points", 10);
 
-    viewpoint_pub_ = this->create_publisher<nav_msgs::msg::Path>("/next_waypoint", 10);
+    viewpoint_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
     gskel_timer_ = this->create_wall_timer(std::chrono::milliseconds(gskel_timer_ms), std::bind(&PlannerNode::publish_gskel, this));
-    viewpoints_timer_ = this->create_wall_timer(std::chrono::milliseconds(viewpoints_timer_ms), std::bind(&PlannerNode::publish_viewpoints, this));
+    // viewpoints_timer_ = this->create_wall_timer(std::chrono::milliseconds(viewpoints_timer_ms), std::bind(&PlannerNode::publish_viewpoints, this));
 
     /* Params */
     // Stuff from launch file (ToDo)...
@@ -142,8 +144,6 @@ void PlannerNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_ms
     orientation.z() = odom_msg->pose.pose.orientation.z;
 }
 
-
-
 void PlannerNode::publish_gskel() {
     if (planner->GS.global_vertices_cloud && !planner->GS.global_vertices_cloud->empty()) {
         sensor_msgs::msg::PointCloud2 output;
@@ -193,7 +193,7 @@ void PlannerNode::publish_gskel() {
 
 void PlannerNode::publish_viewpoints() {
     if (planner->GP.local_vpts.empty()) {
-        RCLCPP_INFO(this->get_logger(), "No Current Waypoints!");
+        RCLCPP_INFO(this->get_logger(), "No Current Viewpoints!");
         return;
     }
     nav_msgs::msg::Path path_msg;
@@ -221,8 +221,6 @@ void PlannerNode::publish_viewpoints() {
     viewpoint_pub_->publish(path_msg);
 }
 
-
-
 void PlannerNode::run() {
     // Changed update logic to:
     // If new vertices -> Update skeleton
@@ -232,10 +230,13 @@ void PlannerNode::run() {
         update_skeleton_flag = false;
         planner->update_skeleton();
     }
-
-    // No matter if new vertices arrived: Plan and refine the current path!
+    
     planner->pose = {position, orientation};
     planner->plan_path();
+    publish_viewpoints();
+    
+    // No matter if new vertices arrived: Plan and refine the current path!
+    
 }
 
 int main(int argc, char** argv) {

@@ -31,6 +31,8 @@ void SkelEx::init() {
 void SkelEx::main() {
     auto t_start = std::chrono::high_resolution_clock::now();
 
+    // Implement so drone need to be close before starting to plan??
+
     distance_filter();
     pcd_size_ = SS.pts_->points.size();
     
@@ -123,25 +125,25 @@ void SkelEx::distance_filter() {
     ec.extract(cluster_indices);
 
     // Step 3: Find the cluster closest to the reference point
-    float min_dist = std::numeric_limits<float>::max();
-    pcl::PointCloud<pcl::PointXYZ>::Ptr best_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+    // float min_dist = std::numeric_limits<float>::max();
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr best_cluster(new pcl::PointCloud<pcl::PointXYZ>);
 
-    for (const auto& indices : cluster_indices) {
-        for (int idx : indices.indices) {
-            const auto& pt = temp_cloud->points[idx];
-            float dist = (ref_pt - Eigen::Vector3f(pt.x, pt.y, pt.z)).norm();
-            if (dist < min_dist) {
-                min_dist = dist;
-                *best_cluster = pcl::PointCloud<pcl::PointXYZ>();
-                for (int i : indices.indices) {
-                    best_cluster->push_back(temp_cloud->points[i]);
-                }
-            }
-        }
-    }
+    // for (const auto& indices : cluster_indices) {
+    //     for (int idx : indices.indices) {
+    //         const auto& pt = temp_cloud->points[idx];
+    //         float dist = (ref_pt - Eigen::Vector3f(pt.x, pt.y, pt.z)).norm();
+    //         if (dist < min_dist) {
+    //             min_dist = dist;
+    //             *best_cluster = pcl::PointCloud<pcl::PointXYZ>();
+    //             for (int i : indices.indices) {
+    //                 best_cluster->push_back(temp_cloud->points[i]);
+    //             }
+    //         }
+    //     }
+    // }
 
     // Step 4: Replace original point cloud with the filtered result
-    SS.pts_ = best_cluster;
+    // SS.pts_ = best_cluster;
 }
 
 void SkelEx::normal_estimation() {
@@ -491,7 +493,6 @@ void SkelEx::vertex_sampling() {
     SS.skelver.resize(0, 3);
     
     double sample_radius = 1.0 * leaf_size_ds;
-    std::cout << "Vertex Sampling Radius: " << sample_radius << std::endl;
 
     // Farthest Point Sampling (FPS) / Skeletonization / Vertex selection
     for (int k=0; k<pcd_size_; k++) {

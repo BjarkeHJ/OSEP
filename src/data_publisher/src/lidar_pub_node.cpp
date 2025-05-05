@@ -20,8 +20,10 @@ public:
     }
 
 private:
+    std::string topic_prefix = "/osep";
     std::string pcd_sub_topic = "/isaac/lidar/raw/pointcloud";
-    std::string pcd_pub_topic = "/lidar_scan";
+    std::string pcd_pub_topic = topic_prefix + "/lidar_scan";
+
     // std::string local_frame_id = "lidar_frame";
     std::string local_frame_id = "lidar";
 

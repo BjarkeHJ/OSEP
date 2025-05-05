@@ -52,7 +52,8 @@ struct SkeletonVertex {
     int obs_count = 0;
     int unconfirmed_check = 0;
     bool conf_check = false;
-    int type = 0; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
+    bool freeze = false;
+    int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     int visited_cnt = 0; // Used for viewpoint generation #
     int invalid = false; // If no proper viewpoint can be generated??
 };
@@ -78,9 +79,12 @@ struct GlobalSkeleton {
     std::vector<int> leafs;
 
     std::vector<std::vector<int>> global_adj;
+
+    int gskel_size;
 };
 
 struct GlobalPath {
+    Viewpoint start;
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_waypoints; // Include the history of waypoints (incremental)
     pcl::PointCloud<pcl::PointXYZ>::Ptr current_waypoints; // Local waypoints (what is being published)
 
@@ -92,6 +96,7 @@ struct GlobalPath {
 class PathPlanner {
 public:
     PathPlanner(rclcpp::Node::SharedPtr node);
+
     void init();
     void plan_path();
     void update_skeleton();
@@ -113,7 +118,9 @@ private:
     void graph_adj();
     void mst();
     void vertex_merge();
-    void prune_branches();    
+    void prune_branches();
+    
+    void smooth_vertex_positions();
     void graph_decomp();
     
     /* Waypoint Generation and PathPlanning*/
@@ -124,9 +131,9 @@ private:
     /* Data */
 
     /* Params */
-    int max_obs_wo_conf = 3; // Maximum number of iters without passing conf check before discarding...
-    double fuse_dist_th = 2.0;
-    double fuse_conf_th = 0.5;
+    int max_obs_wo_conf = 2; // Maximum number of iters without passing conf check before discarding...
+    double fuse_dist_th = 3.0;
+    double fuse_conf_th = 0.2;
     double kf_pn = 0.0001;
     double kf_mn = 0.1;
 };

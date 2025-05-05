@@ -36,6 +36,8 @@ public:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
 private:
+    std::string topic_prefix = "/osep";
+
     /* Utils */
     std::shared_ptr<SkelEx> skel_ex;
 
@@ -59,9 +61,10 @@ void SkeletonExtractionNode::init() {
     RCLCPP_INFO(this->get_logger(), "Initializing Modules and Data Structures...");
     
     /* Subscriber, Publishers, Timers, etc... */
-    pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/lidar_scan", 10, std::bind(&SkeletonExtractionNode::pcd_callback, this, std::placeholders::_1));
-    vertex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/local_vertices", 10);
-    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/local_points", 10);
+    pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic_prefix+"/lidar_scan", 10, std::bind(&SkeletonExtractionNode::pcd_callback, this, std::placeholders::_1));
+    vertex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/local_vertices", 10);
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/local_points", 10);
+    
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&SkeletonExtractionNode::run, this));
     vertex_pub_timer_ = this->create_wall_timer(std::chrono::milliseconds(vertex_pub_timer_ms), std::bind(&SkeletonExtractionNode::publish_vertices, this));
     tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
