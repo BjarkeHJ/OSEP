@@ -83,6 +83,8 @@ void SkeletonExtractionNode::init() {
 }
 
 void SkeletonExtractionNode::pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr pcd_msg) {
+    if (run_flag) return; // Currently processing...
+
     if (pcd_msg->data.empty()) {
         RCLCPP_INFO(this->get_logger(), "Received empty point cloud...");
         return;
@@ -93,7 +95,8 @@ void SkeletonExtractionNode::pcd_callback(const sensor_msgs::msg::PointCloud2::S
     try {
         // curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", pcd_msg->header.stamp, rclcpp::Duration::from_seconds(0.1));
         // curr_tf = tf_buffer_->lookupTransform("World", "lidar_frame", tf2::TimePointZero);
-        curr_tf = tf_buffer_->lookupTransform(global_frame_id, local_frame_id, tf2::TimePointZero);
+        // curr_tf = tf_buffer_->lookupTransform(global_frame_id, local_frame_id, tf2::TimePointZero);
+        curr_tf = tf_buffer_->lookupTransform(global_frame_id, local_frame_id, pcd_msg->header.stamp);
         set_transform();
     }
     catch (const tf2::TransformException &ex) {

@@ -22,34 +22,12 @@ void PathPlanner::init() {
     /* Data */
     GS.global_pts.reset(new pcl::PointCloud<pcl::PointXYZ>);
     GS.global_vertices_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+
     local_pts.reset(new pcl::PointCloud<pcl::PointXYZ>);
     local_vertices.reset(new pcl::PointCloud<pcl::PointXYZ>);
 
-    GP.global_waypoints.reset(new pcl::PointCloud<pcl::PointXYZ>);
-    GP.current_waypoints.reset(new pcl::PointCloud<pcl::PointXYZ>);
-
     GP.curr_id = -1;
     GS.gskel_size = 0;
-}
-
-void PathPlanner::plan_path() {
-    auto t_start = std::chrono::high_resolution_clock::now();
-    
-    // RUN GENERAL PATH PLANNING SELECTION ECT...
-    
-    // Manage adjusted points with a flag
-    // if adjust_flag: -> adjusted points are recieved and 
-    
-    select_viewpoints();
-    
-    // update_skeleton();
-    // graph_adj();
-    // mst();
-    // clean_skeleton_graph();
-
-    auto t_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> t_elapsed = t_end - t_start;
-    RCLCPP_INFO(node_->get_logger(), "[Path Planning] Time Elapsed: %f seconds", t_elapsed.count());
 }
 
 void PathPlanner::update_skeleton() {
@@ -71,7 +49,41 @@ void PathPlanner::update_skeleton() {
 }
 
 
-/* Skeleton Updateing*/
+void PathPlanner::plan_path() {
+    auto t_start = std::chrono::high_resolution_clock::now();
+    // RUN GENERAL PATH PLANNING SELECTION ECT...
+    
+    // While the drone is far away -> give a specific coordinate
+    // if (!planning_started) {
+    //     Viewpoint first_viewpoint;
+    // }
+
+    // If: only first (start) vertex is found
+    // Do: Fly towards it
+
+
+
+    
+    
+    // Manage adjusted points with a flag
+    // if adjust_flag: -> adjusted points are recieved and 
+
+    // Wait for number of vertices before planning?
+    
+    // Sample Viewpoints and score them based on coverage
+    viewpoint_sampling();
+
+    viewpoint_tracking();
+    
+
+
+    auto t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> t_elapsed = t_end - t_start;
+    RCLCPP_INFO(node_->get_logger(), "[Path Planning] Time Elapsed: %f seconds", t_elapsed.count());
+}
+
+
+/* Skeleton Updating*/
 void PathPlanner::skeleton_increment() {
     if (!local_vertices || local_vertices->empty()) {
         RCLCPP_INFO(node_->get_logger(), "No New Vertices...");
@@ -240,8 +252,6 @@ void PathPlanner::smooth_vertex_positions() {
         pcl::PointXYZ pt(v.position(0), v.position(1), v.position(2));
         GS.global_vertices_cloud->points.push_back(pt);
     }
-
-    RCLCPP_INFO(node_->get_logger(), "Smoothed vertex positions.");
 }
 
 void PathPlanner::mst() {
@@ -513,29 +523,22 @@ void PathPlanner::graph_decomp() {
     }
 }
 
+
+
 /* Viewpoint Generation and Path Planning */
-void PathPlanner::select_viewpoints() {
+void PathPlanner::viewpoint_sampling() {
     if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
-    if (GS.global_vertices.size() < 2) {
+
+    if (GS.global_vertices.size() < 5) {
         RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Too few vertices to plan.");
         return;
     }
 
-    std::vector<Viewpoint> temp_vpts;
-
-    const int k_vpts = 10;
-
-    // Do not add more viewpoints if already at capacity
-    if ((int)GP.local_vpts.size() >= k_vpts) {
-        RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Already have %d viewpoints. Skipping update.", k_vpts);
-        return;
-    }
-
-    // Initialize the starting vertex if not already set
     if (GP.curr_id == -1) {
         pcl::PointXYZ dpos(pose.position(0), pose.position(1), pose.position(2));
         pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
         vertex_tree.setInputCloud(GS.global_vertices_cloud);
+
         std::vector<int> id(1);
         std::vector<float> sq_dist(1);
         if (vertex_tree.nearestKSearch(dpos, 1, id, sq_dist) < 1) {
@@ -543,113 +546,54 @@ void PathPlanner::select_viewpoints() {
             return;
         }
         GP.curr_id = id[0];
-    }
+        GP.vertex_nbs_id = GS.global_adj[GP.curr_id];
 
-    // Only generate if current vertex is not a leaf
-    if (GS.global_vertices[GP.curr_id].type == 1) {
-        RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Current vertex is a leaf. No further planning.");
-        return;
-    }
-
-    while ((int)temp_vpts.size() < k_vpts) {
-        const auto& current_ver = GS.global_vertices[GP.curr_id];
-        int next_id = -1;
-
-        switch (current_ver.type) {
-            case 0: {
-                RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Type 0: Invalid vertex.");
-                GP.curr_id = -1;
-                return;
-            }
-
-            case 1: {
-                RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Type 1: Leaf node.");
-                int nb_id = GS.global_adj[GP.curr_id][0];
-                const auto& leaf_nb = GS.global_vertices[nb_id];
-
-                if (leaf_nb.visited_cnt <= current_ver.visited_cnt) {
-                    next_id = nb_id;
-                }
-
-                else {
-                    return;
-                }
-
-                break;
-            }
-
-            case 2: {
-                RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Type 2: Branch node.");
-                const auto& nbs_ids = GS.global_adj[GP.curr_id];
-                int min_visits = std::numeric_limits<int>::max();
-                for (int id : nbs_ids) {
-                    if (GS.global_vertices[id].visited_cnt < min_visits) {
-                        min_visits = GS.global_vertices[id].visited_cnt;
-                        next_id = id;
-                    }
-                }
-                break;
-            }
-
-            case 3: {
-                RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Type 3: Junction node.");
-                next_id = find_next_toward_furthest_leaf(GP.curr_id);
-                if (next_id == -1) {
-                    RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] No path to unvisited leaves from junction.");
-                    return;
-                }
-                break;
-            }
-
-            default: {
-                RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Unknown vertex type.");
-                return;
-            }
-        }
-
-        if (next_id == -1) {
-            RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] No valid next vertex found.");
-            return;
-        }
-
-        Viewpoint next_wp = generate_viewpoint(GP.curr_id, next_id);
-        
-        GS.global_vertices[GP.curr_id].visited_cnt++;
-
-        // GP.local_vpts.push(next_wp);
-        temp_vpts.push_back(next_wp);
-        GP.curr_id = next_id;
-    }
-
-    
-    // === Find index of closest viewpoint to drone ===
-    int best_idx = 0;
-    double min_dist = std::numeric_limits<double>::max();
-    for (int i = 0; i < (int)temp_vpts.size(); ++i) {
-        double d = (temp_vpts[i].position - pose.position).squaredNorm();
-        if (d < min_dist) {
-            min_dist = d;
-            best_idx = i;
+        if (!GP.started) {
+            // Will only enter here the very first time...
+            RCLCPP_INFO(node_->get_logger(), "PathPlanning Initiated!");
+            
+            GP.vertex_start_id = GP.curr_id;
+            GP.started = true;
         }
     }
 
-    // === Rotate vector so closest viewpoint is first ===
-    std::rotate(temp_vpts.begin(), temp_vpts.begin() + best_idx, temp_vpts.end());
 
-    // === Refill queue ===
-    while (!GP.local_vpts.empty()) GP.local_vpts.pop();
-    for (const auto& vp : temp_vpts) {
-        GP.local_vpts.push(vp);
+    if ((int)GP.vertex_nbs_id.size() == 0) return;
+
+    int max_local_vpts = 5;
+
+    std::vector<int> target_branch = find_next_toward_furthest_leaf(GP.curr_id); // Seek furthest frontier
+    std::vector<Viewpoint> candidates;
+
+    for (int i=0; i+1<(int)target_branch.size(); ++i) {
+        Viewpoint vp = generate_viewpoint(target_branch[i], target_branch[i+1]);
+        candidates.push_back(vp);
+        GS.global_vertices[i].visited_cnt++;
+
+        // if (vp.score > 0.01) {
+        // }
+    }
+    RCLCPP_INFO(node_->get_logger(), "Viewpoint Candidate Size: %d", (int)candidates.size());
+
+    int i = 0;
+    while ((int)GP.local_vpts.size() < max_local_vpts) {
+        if (!candidates[i].visited) {
+            GP.local_vpts.push(candidates[i++]);
+        }
     }
 
 
-    RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Planned up to %d viewpoints.", k_vpts);
+
+    // Compare with current published viewpoint list?
+    // fallback
+    // If it get lost -> set GP.curr_id = -1 -> pick closest vertex
 }
 
 Viewpoint PathPlanner::generate_viewpoint(int id, int id_next) {
     Viewpoint vp;
     Eigen::Vector3d u;
-    double disp_dist = 15.0;
+
+    double disp_dist = 15;
 
     const Eigen::Vector3d p1 = GS.global_vertices[id].position;
     const Eigen::Vector3d p2 = GS.global_vertices[id_next].position;
@@ -683,34 +627,116 @@ Viewpoint PathPlanner::generate_viewpoint(int id, int id_next) {
     vp.position = vp_pos;
     vp.orientation = Eigen::Quaterniond(yaw_rot);
 
-    RCLCPP_INFO(node_->get_logger(), "Generated Viewpoint at (%.2f, %.2f, %.2f)",
-            vp.position.x(), vp.position.y(), vp.position.z());
-
+    //Scoring...
+    score_viewpoint(vp);
     return vp;
 }
 
-int PathPlanner::find_next_toward_furthest_leaf(int start_id) {
+void PathPlanner::score_viewpoint(Viewpoint &vp) {
+    if (GS.global_pts->empty()) {
+        RCLCPP_WARN(node_->get_logger(), "Global Points is empty!");
+        return;
+    }
+
+    /* From a Viewpoint Candidate - Map the camera FOV and identify seen voxels */
+    int info_steps = 5;
+
+    pcl::KdTreeFLANN<pcl::PointXYZ> tree;
+    tree.setInputCloud(GS.global_pts);
+    
+    pcl::PointXYZ vp_pos(vp.position.x(), vp.position.y(), vp.position.z());
+    Eigen::Vector3d cam_dir = vp.orientation * Eigen::Vector3d::UnitX();
+    cam_dir.normalize();
+    
+    double safe_rad = 5.0;
+    std::vector<int> ids;
+    std::vector<float> dists;
+    tree.radiusSearch(vp_pos, safe_rad, ids, dists);
+    if (ids.size() > 0) {
+        vp.score = 0.0;
+        return;
+    }
+    
+    // Map FoV cone onto structure 
+    float cos_half_h = std::cos((fov_h * 0.5f) * M_PI / 180.0f);
+    float cos_half_v = std::cos((fov_v * 0.5f) * M_PI / 180.0f);
+    std::unordered_set<VoxelIndex, VoxelIndexHash> seen_here;
+    int unseen_voxels = 0;
+
+    for (const auto &pt : GS.global_pts->points) {
+        Eigen::Vector3d target(pt.x, pt.y, pt.z);
+        Eigen::Vector3d vec = target - vp.position;
+
+        double dist = vec.norm();
+        if (dist < min_view_dist || dist > max_view_dist) continue;
+
+        Eigen::Vector3d dir = vec.normalized();
+        double cos_angle_h = dir.dot(cam_dir);
+        if (cos_angle_h < cos_half_h) continue;
+
+        double cos_angle_v = std::abs(dir.dot(Eigen::Vector3d::UnitZ()));
+        if (cos_angle_v < cos_half_v) continue;
+
+        // It is inside the FoV-cone
+        // Do ray-casting from the viewpoint towards the vertex (in steps)
+
+        for (int i=1; i<=info_steps; ++i) {
+            Eigen::Vector3d sample = vp.position + dir * (dist * i / double(info_steps));
+            VoxelIndex key = {
+                int(std::floor(sample.x() / voxel_size)),
+                int(std::floor(sample.y() / voxel_size)),
+                int(std::floor(sample.z() / voxel_size))
+            };
+
+            if (seen_here.count(key)) continue; // voxel
+            seen_here.insert(key);
+
+            if (GS.voxels.count(key) == 0) continue; // Skip free-space voxels...
+
+            vp.visible_voxels.insert(key); // Assign visible voxels to the viewpoint
+            
+            auto it = GS.seen_voxels.find(key);
+            if (it == GS.seen_voxels.end() || it->second < 1) {
+                unseen_voxels++;
+            }
+            
+            break;
+        }
+    }
+
+    double score = std::min(1.0f, static_cast<float>(unseen_voxels) / 50.0f);
+    vp.score = score; // Set the score of the viewpoint
+}
+
+std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id) {
+    int best_visited_cnt = std::numeric_limits<int>::max();
     int max_depth = -1;
     std::vector<int> best_path;
     std::unordered_set<int> visited;
     std::vector<int> current_path;
 
-    // Recursive depth first search
     std::function<void(int, int)> dfs = [&](int v, int depth) {
         visited.insert(v);
         current_path.push_back(v);
         const auto& node = GS.global_vertices[v];
 
-        if (node.type == 1 && node.visited_cnt == 0) {
-            if (depth > max_depth) {
+        if (node.type == 3) {
+            current_path.pop_back();
+            return;
+        }
+
+        if (node.type == 1) {
+            // Prefer lower visited_cnt; break ties using depth
+            if (node.visited_cnt < best_visited_cnt || (node.visited_cnt == best_visited_cnt && depth > max_depth)) {
+                best_visited_cnt = node.visited_cnt;
                 max_depth = depth;
                 best_path = current_path;
             }
         }
 
-        if (v < (int)GS.global_adj.size()) {
+        if (v < static_cast<int>(GS.global_vertices.size())) {
             for (int nb : GS.global_adj[v]) {
-                if (!visited.count(nb) && GS.global_vertices[nb].visited_cnt == 0) {
+                if (!visited.count(nb)) {
                     dfs(nb, depth + 1);
                 }
             }
@@ -720,186 +746,89 @@ int PathPlanner::find_next_toward_furthest_leaf(int start_id) {
     };
 
     dfs(start_id, 0);
+    return best_path;
+}
 
-    // If a valid path is found and has at least two nodes, return the second node (next step)
-    if (best_path.size() >= 2)
-        return best_path[1];
+void PathPlanner::viewpoint_tracking() {
+    if (GP.local_vpts.empty()) return;
 
-    return -1;  // No valid next step
+    double dist_check_th = 0.5;
+    
+    std::queue<Viewpoint> vp_copy = GP.local_vpts;
+    Viewpoint current_next = vp_copy.front();
+    double distance_to_drone = (current_next.position - pose.position).norm();
+
+    if (distance_to_drone < dist_check_th) {
+        RCLCPP_INFO(node_->get_logger(), "Arrived at viewpoint!");
+        GP.local_vpts.pop();
+    }
+}
+
+void PathPlanner::global_cloud_handler() {
+    for (const auto &pt : local_pts->points) {
+        if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) continue;
+        VoxelIndex idx = {
+            static_cast<int>(std::floor(pt.x / voxel_size)),
+            static_cast<int>(std::floor(pt.y / voxel_size)),
+            static_cast<int>(std::floor(pt.z / voxel_size))
+        };
+
+        GS.voxel_point_count[idx]++;
+
+        if (GS.voxel_point_count[idx] >= 3) {
+            GS.voxels.insert(idx);
+        }
+    }
+
+    GS.global_pts->clear();
+    for (const auto &v : GS.voxels) {
+        GS.global_pts->points.emplace_back(
+            (v.x + 0.5f) * voxel_size,
+            (v.y + 0.5f) * voxel_size,
+            (v.z + 0.5f) * voxel_size
+        );
+    }
 }
 
 
+// std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id) {
+//     int max_depth = -1;
+//     std::vector<int> best_path;
+//     std::unordered_set<int> visited;
+//     std::vector<int> current_path;
 
+//     // Recursive depth first search
+//     std::function<void(int, int)> dfs = [&](int v, int depth) {
+//         visited.insert(v);
+//         current_path.push_back(v);
+//         const auto& node = GS.global_vertices[v];
 
-// void PathPlanner::mst() {
-//     int N_ver = GS.global_vertices.size();
-//     if (N_ver == 0 || GS.global_adj.empty()) {
-//         RCLCPP_WARN(node_->get_logger(), "Global skeleton is empty, cannot extract MST.");
-//         return;
-//     }
-
-//     std::vector<Edge> mst_edges;
-//     for (int i = 0; i < N_ver; ++i) {
-//         for (int nb : GS.global_adj[i]) {
-//             if (nb <= i) continue; // Avoid bi-directional check
-//             Eigen::Vector3d ver_i = GS.global_vertices[i].position;
-//             Eigen::Vector3d ver_nb = GS.global_vertices[nb].position;
-//             double weight = (ver_i - ver_nb).norm();
-//             mst_edges.push_back({i, nb, weight});
+//         if (node.type == 1 && node.visited_cnt == 0) {
+//             if (depth > max_depth) {
+//                 max_depth = depth;
+//                 best_path = current_path;
+//             }
 //         }
-//     }
 
-//     std::sort(mst_edges.begin(), mst_edges.end());
-
-//     UnionFind uf(N_ver);
-//     std::vector<std::vector<int>> mst_adj(N_ver);
-
-//     for (const auto& edge : mst_edges) {
-//         if (uf.unite(edge.u, edge.v)) {
-//             mst_adj[edge.u].push_back(edge.v);
-//             mst_adj[edge.v].push_back(edge.u);
+//         if (v < (int)GS.global_adj.size()) {
+//             for (int nb : GS.global_adj[v]) {
+//                 if (!visited.count(nb) && GS.global_vertices[nb].visited_cnt == 0) {
+//                     dfs(nb, depth + 1);
+//                 }
+//             }
 //         }
-//     }
 
-//     GS.global_adj = std::move(mst_adj);
+//         current_path.pop_back();
+//     };
 
-//     // Identify leafs and joints
-//     graph_decomp();
+//     dfs(start_id, 0);
+
+//     // If a valid path is found and has at least two nodes, return the second node (next step)
+//     // if (best_path.size() >= 2)
+//     //     return best_path;
+
+//     // return -1;  // No valid next step
+
+//     return best_path;
 // }
 
-
-
-
-
-
-// void PathPlanner::select_viewpoints() {
-//     if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
-
-//     if (GS.global_vertices.size() < 2) {
-//         RCLCPP_WARN(node_->get_logger(), "Too few vertices to plan.");
-//         return;
-//     }
-
-//     if (GP.curr_id == -1) {
-//         /* Initialize Planning (First Waypoint) */
-//         pcl::PointXYZ dpos(pose.position(0), pose.position(1), pose.position(2));
-//         pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
-//         vertex_tree.setInputCloud(GS.global_vertices_cloud);
-//         std::vector<int> id(1);
-//         std::vector<float> sq_dist(1);
-//         if (vertex_tree.nearestKSearch(dpos, 1, id, sq_dist) < 1) {
-//             RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Did not find a vertex");
-//             return;
-//         }
-//         GP.curr_id = id[0];
-//     }
-
-//     if (GS.global_vertices[GP.curr_id].type != 1) {
-//         int k_wpts = 5;
-//         while ((int)GP.local_vpts.size() <= k_wpts) {
-//             auto& current_ver = GS.global_vertices[GP.curr_id];
-//             int next_id = -1;
-
-//             // invalid point
-//             if (current_ver.type == 0) {
-//                 RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Type 0: Current Vertice Invalid!");
-//                 return;
-//             }
-
-//             if (current_ver.type == 1) {
-//                 RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Type 1: Leaf...");
-//                 return;
-//             }
-
-//             if (current_ver.type == 2) {
-//                 RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Type 2: Branch...");
-//                 std::vector<int> nbs_ids = GS.global_adj[GP.curr_id];
-//                 int vis = 100; // arbitrary large int
-//                 for (int id : nbs_ids) {
-//                     if (GS.global_vertices[id].visited_cnt < vis) {
-//                         vis = GS.global_vertices[id].visited_cnt;
-//                         next_id = id;
-//                     }
-//                 }
-//             }
-
-//             if (current_ver.type == 3) {
-//                 RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] Type 3: Junction...");
-//                 int temp = find_next_toward_furthest_leaf(GP.curr_id);
-//                 if (temp != -1) {
-//                     next_id = temp;
-//                 }
-//                 else {
-//                     RCLCPP_INFO(node_->get_logger(), "[Select Viewpoints] No path to unvisited leaves from junction.");
-//                 }
-//             }
-
-
-
-//             Viewpoint next_wp = generate_viewpoint(GP.curr_id, next_id); // Define new viewpoint (set position and orientation)
-
-//             GP.local_vpts.push(next_wp);
-//             GP.curr_id = next_id;
-//         }
-//     }
-// }
-
-
-
-
-
-
-
-
-
-    // GP.current_waypoints->clear();
-    // const int K_ver = 2;
-    // double disp_dist = 10;
-
-    // pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
-    // vertex_tree.setInputCloud(GS.global_vertices_cloud);
-
-    // const pcl::PointXYZ pos(pose.position(0), pose.position(1), pose.position(2));
-    // std::vector<int> indices;
-    // std::vector<float> sq_dists;
-
-    // if (vertex_tree.nearestKSearch(pos, K_ver, indices, sq_dists) <= 1) {
-    //     RCLCPP_INFO(node_->get_logger(), "Did not find enough vertices to plan path...");
-    //     return;
-    // }
-
-    // // Check if the vertices are connected in the graph!
-    // // Check if vertices are marked visited
-
-    // Eigen::Vector3d u;
-    // const Eigen::Vector3d p1 = GS.global_vertices[indices[0]].position;
-    // const Eigen::Vector3d p2 = GS.global_vertices[indices[1]].position;
-    // Eigen::Vector3d dir = p2 - p1;
-
-    // if (dir.norm() < 1e-2) return;  // Avoid near-zero direction
-
-    // Eigen::Vector2d dir_xy = dir.head<2>(); // Direction in xy-plane only
-
-    // if (dir_xy.norm() > 0.5) {
-    //     // Case where points are not only in z-direction (vertical)
-    //     dir_xy.normalize();
-    //     Eigen::Vector3d u1(-dir_xy.y(), dir_xy.x(), 0.0);
-    //     Eigen::Vector3d u2(dir_xy.y(), -dir_xy.x(), 0.0);
-    //     double d1 = (pose.position - (p2 + u1)).squaredNorm();
-    //     double d2 = (pose.position - (p2 + u2)).squaredNorm();
-    //     u = (d1 < d2) ? u1 : u2; // if d1 < d2 -> u=u1 else u=u2;
-    // }
-    // else {
-    //     Eigen::Vector2d to_drone_xy = (pose.position.head<2>() - p2.head<2>());
-    //     if (to_drone_xy.norm() < 1e-2) return;
-    //     to_drone_xy.normalize();
-    //     u = Eigen::Vector3d(to_drone_xy.x(), to_drone_xy.y(), 0.0);
-    // }
-
-    // // Generate and store the waypoint
-    // const Eigen::Vector3d wayp = p2 + u * disp_dist;
-    // GP.current_waypoints->points.emplace_back(wayp.x(), wayp.y(), wayp.z());
-    // GP.current_waypoints->points.emplace_back(pos);
-    // for (const auto &id : indices) {
-    //     GP.current_waypoints->points.emplace_back(GS.global_vertices_cloud->points[id]); // adds the two points
-    // }

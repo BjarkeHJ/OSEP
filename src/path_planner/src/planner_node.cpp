@@ -105,19 +105,14 @@ void PlannerNode::pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cl
         RCLCPP_INFO(this->get_logger(), "Received empty point cloud");
         return;
     }
-    cloud->clear();
-    pcl::fromROSMsg(*cloud_msg, *cloud);
-    *(planner->GS.global_pts) += *cloud;
+    pcl::fromROSMsg(*cloud_msg, *planner->local_pts);
+    planner->global_cloud_handler();
 
-    vgf_ds.setInputCloud(planner->GS.global_pts);
-    vgf_ds.setLeafSize(1.0, 1.0, 1.0);
-    vgf_ds.filter(*planner->GS.global_pts);
-
-    sensor_msgs::msg::PointCloud2 output_msg;
-    pcl::toROSMsg(*planner->GS.global_pts, output_msg);
-    output_msg.header.frame_id = global_frame_id;
-    output_msg.header.stamp = cloud_msg->header.stamp;
-    cloud_pub_->publish(output_msg);
+    sensor_msgs::msg::PointCloud2 global_msg;
+    pcl::toROSMsg(*planner->GS.global_pts, global_msg);
+    global_msg.header.frame_id = global_frame_id;
+    global_msg.header.stamp = cloud_msg->header.stamp;
+    cloud_pub_->publish(global_msg);
 }
 
 void PlannerNode::vertex_callback(const sensor_msgs::msg::PointCloud2::SharedPtr vertex_msg) {
@@ -230,6 +225,8 @@ void PlannerNode::run() {
         update_skeleton_flag = false;
         planner->update_skeleton();
     }
+    
+
     
     planner->pose = {position, orientation};
     planner->plan_path();

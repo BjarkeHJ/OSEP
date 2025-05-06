@@ -11,6 +11,23 @@
 #include <Eigen/Core>
 
 
+struct VoxelIndex {
+    int x, y, z;
+    bool operator==(const VoxelIndex &other) const {
+        return std::tie(x, y, z) == std::tie(other.x, other.y, other.z);
+    }
+
+    bool operator<(const VoxelIndex &other) const {
+        return std::tie(x, y, z) < std::tie(other.x, other.y, other.z);
+    }
+};
+
+struct VoxelIndexHash {
+    std::size_t operator()(const VoxelIndex &k) const {
+        return std::hash<int>()(k.x) ^ std::hash<int>()(k.y << 1) ^ std::hash<int>()(k.z << 2);
+    }
+};
+
 struct Edge
 {
     int u, v; // Vertex indices of the edge
@@ -54,6 +71,7 @@ struct SkeletonVertex {
     bool conf_check = false;
     bool freeze = false;
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
+    
     int visited_cnt = 0; // Used for viewpoint generation #
     int invalid = false; // If no proper viewpoint can be generated??
 };
@@ -66,14 +84,20 @@ struct DronePose {
 struct Viewpoint {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
+    std::set<VoxelIndex> visible_voxels;
+    double score = 0.0f;
     bool visited = false;
 };
 
 struct GlobalSkeleton {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices_cloud;
+    std::unordered_set<VoxelIndex, VoxelIndexHash> voxels;
+    std::unordered_map<VoxelIndex, int, VoxelIndexHash> voxel_point_count;
+    std::unordered_map<VoxelIndex, int, VoxelIndexHash> seen_voxels;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts; // For visualizing
+
     std::vector<SkeletonVertex> prelim_vertices;
     std::vector<SkeletonVertex> global_vertices;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices_cloud; // For visualizing
 
     std::vector<int> joints;
     std::vector<int> leafs;
@@ -84,11 +108,13 @@ struct GlobalSkeleton {
 };
 
 struct GlobalPath {
-    Viewpoint start;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_waypoints; // Include the history of waypoints (incremental)
-    pcl::PointCloud<pcl::PointXYZ>::Ptr current_waypoints; // Local waypoints (what is being published)
+    bool started = false;
+    int vertex_start_id;
+    std::vector<int> vertex_nbs_id;
 
+    Viewpoint start;
     int curr_id;
+
     std::vector<Viewpoint> global_vpts;
     std::queue<Viewpoint> local_vpts;
 };
@@ -100,7 +126,10 @@ public:
     void init();
     void plan_path();
     void update_skeleton();
-    
+        
+    /* Occupancy */
+    void global_cloud_handler();
+
     /* Data */
     GlobalSkeleton GS;
     GlobalPath GP;
@@ -109,6 +138,8 @@ public:
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_vertices;
 
     DronePose pose;
+
+    bool planning_started = false;
 
 private:
     rclcpp::Node::SharedPtr node_;
@@ -124,9 +155,20 @@ private:
     void graph_decomp();
     
     /* Waypoint Generation and PathPlanning*/
+    void viewpoint_sampling();
+    void viewpoint_selection(int start_id);
+
     void select_viewpoints();
+
+    void viewpoint_tracking();
+
     Viewpoint generate_viewpoint(int id, int id_next);
-    int find_next_toward_furthest_leaf(int start_id);
+    void score_viewpoint(Viewpoint &vp);
+    
+    // int find_next_toward_furthest_leaf(int start_id);
+    std::vector<int> find_next_toward_furthest_leaf(int start_id);
+
+
 
     /* Data */
 
@@ -136,6 +178,12 @@ private:
     double fuse_conf_th = 0.2;
     double kf_pn = 0.0001;
     double kf_mn = 0.1;
+
+    double voxel_size = 0.5;
+    double fov_h = 90;
+    double fov_v = 60;
+    double max_view_dist = 20;
+    double min_view_dist = 5;
 };
 
 #endif //PLANNER_MAIN_
