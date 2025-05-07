@@ -17,6 +17,7 @@ void PathPlanner::init() {
     /* Param */
     // Stuff from launch file (ToDo)...
 
+
     /* Modules */
 
     /* Data */
@@ -52,29 +53,17 @@ void PathPlanner::update_skeleton() {
 void PathPlanner::plan_path() {
     auto t_start = std::chrono::high_resolution_clock::now();
     // RUN GENERAL PATH PLANNING SELECTION ECT...
-    
-    // While the drone is far away -> give a specific coordinate
-    // if (!planning_started) {
-    //     Viewpoint first_viewpoint;
-    // }
 
     // If: only first (start) vertex is found
     // Do: Fly towards it
-
-
-
-    
-    
     // Manage adjusted points with a flag
     // if adjust_flag: -> adjusted points are recieved and 
 
     // Wait for number of vertices before planning?
     
-    // Sample Viewpoints and score them based on coverage
+    // Sample Viewpoints
     viewpoint_sampling();
 
-    viewpoint_tracking();
-    
 
 
     auto t_end = std::chrono::high_resolution_clock::now();
@@ -524,7 +513,6 @@ void PathPlanner::graph_decomp() {
 }
 
 
-
 /* Viewpoint Generation and Path Planning */
 void PathPlanner::viewpoint_sampling() {
     if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
@@ -560,7 +548,7 @@ void PathPlanner::viewpoint_sampling() {
 
     if ((int)GP.vertex_nbs_id.size() == 0) return;
 
-    int max_local_vpts = 5;
+    int max_local_vpts = 10;
 
     std::vector<int> target_branch = find_next_toward_furthest_leaf(GP.curr_id); // Seek furthest frontier
     std::vector<Viewpoint> candidates;
@@ -568,19 +556,20 @@ void PathPlanner::viewpoint_sampling() {
     for (int i=0; i+1<(int)target_branch.size(); ++i) {
         Viewpoint vp = generate_viewpoint(target_branch[i], target_branch[i+1]);
         candidates.push_back(vp);
-        GS.global_vertices[i].visited_cnt++;
 
-        // if (vp.score > 0.01) {
-        // }
-    }
-    RCLCPP_INFO(node_->get_logger(), "Viewpoint Candidate Size: %d", (int)candidates.size());
-
-    int i = 0;
-    while ((int)GP.local_vpts.size() < max_local_vpts) {
-        if (!candidates[i].visited) {
-            GP.local_vpts.push(candidates[i++]);
+        if ((int)GP.local_vpts.size() < max_local_vpts) {
+            GS.global_vertices[i].visited_cnt++;
+            GP.local_vpts.push(candidates[i]);
+            GP.curr_id = target_branch[i];
         }
     }
+
+    // int i = 0;
+    // while ((int)GP.local_vpts.size() < max_local_vpts) {
+    //     if (!candidates[i].visited) {
+    //         GP.local_vpts.push(candidates[i++]);
+    //     }
+    // }
 
 
 
@@ -593,7 +582,7 @@ Viewpoint PathPlanner::generate_viewpoint(int id, int id_next) {
     Viewpoint vp;
     Eigen::Vector3d u;
 
-    double disp_dist = 15;
+    double disp_dist = 12;
 
     const Eigen::Vector3d p1 = GS.global_vertices[id].position;
     const Eigen::Vector3d p2 = GS.global_vertices[id_next].position;
@@ -749,21 +738,6 @@ std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id) {
     return best_path;
 }
 
-void PathPlanner::viewpoint_tracking() {
-    if (GP.local_vpts.empty()) return;
-
-    double dist_check_th = 0.5;
-    
-    std::queue<Viewpoint> vp_copy = GP.local_vpts;
-    Viewpoint current_next = vp_copy.front();
-    double distance_to_drone = (current_next.position - pose.position).norm();
-
-    if (distance_to_drone < dist_check_th) {
-        RCLCPP_INFO(node_->get_logger(), "Arrived at viewpoint!");
-        GP.local_vpts.pop();
-    }
-}
-
 void PathPlanner::global_cloud_handler() {
     for (const auto &pt : local_pts->points) {
         if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) continue;
@@ -789,6 +763,8 @@ void PathPlanner::global_cloud_handler() {
         );
     }
 }
+
+
 
 
 // std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id) {

@@ -122,6 +122,7 @@ void SkeletonExtractionNode::set_transform() {
 
 void SkeletonExtractionNode::run() {
     if (run_flag) {
+        
         run_flag = false;
         skel_ex->main();
 

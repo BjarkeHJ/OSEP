@@ -88,7 +88,7 @@ private:
     rclcpp::Node::SharedPtr node_;
 
     /* Params */
-    double pts_dist_lim = 30;
+    double pts_dist_lim = 25;
     int ne_KNN = 20; //Normal Estimation neighbors
     int k_KNN = 10; //Surface neighbors 
     double leaf_size_ds;

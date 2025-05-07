@@ -156,21 +156,13 @@ private:
     
     /* Waypoint Generation and PathPlanning*/
     void viewpoint_sampling();
-    void viewpoint_selection(int start_id);
-
-    void select_viewpoints();
-
-    void viewpoint_tracking();
-
     Viewpoint generate_viewpoint(int id, int id_next);
-    void score_viewpoint(Viewpoint &vp);
-    
-    // int find_next_toward_furthest_leaf(int start_id);
+    void score_viewpoint(Viewpoint &vp);    
     std::vector<int> find_next_toward_furthest_leaf(int start_id);
 
-
-
     /* Data */
+    bool planner_flag = false;
+
 
     /* Params */
     int max_obs_wo_conf = 2; // Maximum number of iters without passing conf check before discarding...

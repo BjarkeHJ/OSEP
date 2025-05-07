@@ -32,6 +32,8 @@ public:
 
     void publish_gskel();
     void publish_viewpoints();
+    void init_path();
+    void drone_tracking();
 
     void run();
 
@@ -56,6 +58,8 @@ private:
     std::shared_ptr<PathPlanner> planner;
 
     bool update_skeleton_flag = false;
+    bool planner_flag = false;
+
     int run_timer_ms = 50;
     int gskel_timer_ms = 50;
     int viewpoints_timer_ms = 500;
@@ -85,7 +89,7 @@ void PlannerNode::init() {
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
-    gskel_timer_ = this->create_wall_timer(std::chrono::milliseconds(gskel_timer_ms), std::bind(&PlannerNode::publish_gskel, this));
+    // gskel_timer_ = this->create_wall_timer(std::chrono::milliseconds(gskel_timer_ms), std::bind(&PlannerNode::publish_gskel, this));
     // viewpoints_timer_ = this->create_wall_timer(std::chrono::milliseconds(viewpoints_timer_ms), std::bind(&PlannerNode::publish_viewpoints, this));
 
     /* Params */
@@ -98,6 +102,8 @@ void PlannerNode::init() {
     /* Modules */
     planner = std::make_shared<PathPlanner>(shared_from_this());
     planner->init();
+
+    RCLCPP_INFO(this->get_logger(), "Done!");
 }
 
 void PlannerNode::pcd_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg) {
@@ -191,6 +197,7 @@ void PlannerNode::publish_viewpoints() {
         RCLCPP_INFO(this->get_logger(), "No Current Viewpoints!");
         return;
     }
+
     nav_msgs::msg::Path path_msg;
     path_msg.header.frame_id = global_frame_id;
     path_msg.header.stamp = now();
@@ -216,24 +223,80 @@ void PlannerNode::publish_viewpoints() {
     viewpoint_pub_->publish(path_msg);
 }
 
+void PlannerNode::init_path() {
+    // Guiding the drone towards the structure
+    Viewpoint first_vp;
+    Viewpoint second_vp;
+    Viewpoint third_vp;
+    Viewpoint fourth_vp;
+    
+    first_vp.position = Eigen::Vector3d(0.0, 0.0, 50.0);
+    first_vp.orientation = Eigen::Quaterniond::Identity();
+
+    second_vp.position = Eigen::Vector3d(50.0, 0.0, 120.0);
+    second_vp.orientation = Eigen::Quaterniond::Identity();
+
+    third_vp.position = Eigen::Vector3d(100.0, 0.0, 120.0);
+    third_vp.orientation = Eigen::Quaterniond::Identity();
+
+    fourth_vp.position = Eigen::Vector3d(170.0, 0.0, 120.0);
+    fourth_vp.orientation = Eigen::Quaterniond::Identity();
+
+    planner->GP.local_vpts.push(first_vp);
+    planner->GP.local_vpts.push(second_vp);
+    planner->GP.local_vpts.push(third_vp);
+    planner->GP.local_vpts.push(fourth_vp);
+}
+
+void PlannerNode::drone_tracking() {
+    if (planner->GP.local_vpts.empty()) return;
+    double dist_check_th = 1.0;
+
+    while (!planner->GP.local_vpts.empty()) {
+        const Viewpoint& current_next = planner->GP.local_vpts.front();
+        double distance_to_drone = (current_next.position - position).norm();
+
+        if (distance_to_drone < dist_check_th) {
+            RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Popping from queue");
+            planner->GP.local_vpts.pop();
+        }
+        else {
+            break;
+        }
+    }
+}
+
 void PlannerNode::run() {
-    // Changed update logic to:
-    // If new vertices -> Update skeleton
-    // If no new vertices -> Still perform refinements and path planning computations etc...
+    if (!planner_flag) {
+        /* Initial Flight to Structure (Predefined) */
+        if (planner->GP.local_vpts.empty()) {
+            init_path(); // Set once     
+        }
+        
+        if (!planner->local_vertices->empty()) {
+            RCLCPP_INFO(this->get_logger(), "Recieved first vertices - Starting Planning!");
+            while (!planner->GP.local_vpts.empty()) planner->GP.local_vpts.pop();
+            planner_flag = true;
+        }
+
+        drone_tracking();
+        publish_viewpoints();
+        return;
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Updating Skeleton and Planning Path");
 
     if (update_skeleton_flag) {
         update_skeleton_flag = false;
         planner->update_skeleton();
     }
-    
 
-    
+    publish_gskel();
+
     planner->pose = {position, orientation};
     planner->plan_path();
+    drone_tracking();
     publish_viewpoints();
-    
-    // No matter if new vertices arrived: Plan and refine the current path!
-    
 }
 
 int main(int argc, char** argv) {

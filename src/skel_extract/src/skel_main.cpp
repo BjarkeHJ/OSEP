@@ -56,7 +56,7 @@ void SkelEx::main() {
     // REMOVE VERTICES CLOSE TO GROUND!
     get_vertices();
 
-    visualizer(); // For publishing at the end of each iteration...
+    // visualizer(); // For publishing at the end of each iteration...
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> t_elapsed = t_end - t_start;
     RCLCPP_INFO(node_->get_logger(), "Time Elapsed: %f seconds", t_elapsed.count());
