@@ -39,7 +39,7 @@ void PathPlanner::update_skeleton() {
     graph_adj();
     smooth_vertex_positions();
     mst();
-    // vertex_merge();
+    vertex_merge();
     prune_branches();
 
     N_new_vers = (int)GS.global_vertices.size() - GS.gskel_size; // Number of new vertices added

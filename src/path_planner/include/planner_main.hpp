@@ -178,7 +178,7 @@ private:
 
     /* Params */
     int max_obs_wo_conf = 2; // Maximum number of iters without passing conf check before discarding...
-    double fuse_dist_th = 2.5;
+    double fuse_dist_th = 3.0;
     double fuse_conf_th = 0.1;
     double kf_pn = 0.00001;
     double kf_mn = 0.1;
