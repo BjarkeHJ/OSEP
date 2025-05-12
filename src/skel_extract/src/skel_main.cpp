@@ -50,10 +50,8 @@ void SkelEx::main() {
     drosa();
     dcrosa();
     vertex_sampling();
-    vertex_recenter();
     vertex_smooth();
-
-    // REMOVE VERTICES CLOSE TO GROUND!
+    vertex_recenter();
     get_vertices();
 
     // visualizer(); // For publishing at the end of each iteration...
@@ -103,48 +101,11 @@ void SkelEx::distance_filter() {
     ptf.setFilterFieldName("x");
     ptf.setFilterLimits(-pts_dist_lim, pts_dist_lim);
     ptf.filter(*temp_cloud);  
-
+    
     ptf.setInputCloud(temp_cloud);
     ptf.setFilterFieldName("y");
     ptf.setFilterLimits(-pts_dist_lim, pts_dist_lim);
     ptf.filter(*SS.pts_);
-
-    
-    // Step 2: Euclidean Clustering
-
-    // Eigen::Vector3f ref_pt = Eigen::Vector3f::Zero();
-    // pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-    // tree->setInputCloud(temp_cloud);
-
-    // std::vector<pcl::PointIndices> cluster_indices;
-    // pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    // ec.setClusterTolerance(1.0); // Adjust based on point spacing
-    // ec.setMinClusterSize(100);
-    // ec.setMaxClusterSize(10000);
-    // ec.setSearchMethod(tree);
-    // ec.setInputCloud(temp_cloud);
-    // ec.extract(cluster_indices);
-
-    // Step 3: Find the cluster closest to the reference point
-    // float min_dist = std::numeric_limits<float>::max();
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr best_cluster(new pcl::PointCloud<pcl::PointXYZ>);
-
-    // for (const auto& indices : cluster_indices) {
-    //     for (int idx : indices.indices) {
-    //         const auto& pt = temp_cloud->points[idx];
-    //         float dist = (ref_pt - Eigen::Vector3f(pt.x, pt.y, pt.z)).norm();
-    //         if (dist < min_dist) {
-    //             min_dist = dist;
-    //             *best_cluster = pcl::PointCloud<pcl::PointXYZ>();
-    //             for (int i : indices.indices) {
-    //                 best_cluster->push_back(temp_cloud->points[i]);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // Step 4: Replace original point cloud with the filtered result
-    // SS.pts_ = best_cluster;
 }
 
 void SkelEx::normal_estimation() {
@@ -566,7 +527,7 @@ void SkelEx::vertex_recenter() {
         Eigen::MatrixXd extract_nrs = et_vr.rows_ext_M(c_indxs_d, SS.nrs_matrix);
 
         Eigen::Vector3d eucl_center = extract_pts.colwise().mean();
-        Eigen::Vector3d current = SS.skelver.row(i); // this dont work
+        Eigen::Vector3d current = SS.skelver.row(i);
 
         Eigen::Vector3d fuse_center = alpha * current + (1.0 - alpha) * eucl_center;
         SS.skelver.row(i) = fuse_center.transpose();

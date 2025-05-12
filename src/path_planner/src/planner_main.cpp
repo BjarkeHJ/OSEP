@@ -41,7 +41,10 @@ void PathPlanner::update_skeleton() {
     vertex_merge();
     prune_branches();
 
-    GS.gskel_size = (int)GS.global_vertices.size();
+    int N_new_vers = (int)GS.global_vertices.size() - GS.gskel_size; // Number of new vertices added
+    RCLCPP_INFO(node_->get_logger(), "New Vertices: %d", N_new_vers);
+
+    GS.gskel_size = (int)GS.global_vertices.size(); // Update total number of vertices
     RCLCPP_INFO(node_->get_logger(), "Global Skeleton Size: %d", GS.gskel_size);
 
     auto t_end = std::chrono::high_resolution_clock::now();
