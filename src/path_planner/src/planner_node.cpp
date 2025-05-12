@@ -12,6 +12,7 @@ Path Planner Node
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/pose_array.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
@@ -46,6 +47,7 @@ public:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr viewpoint_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_2_;
     
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr gskel_timer_;
@@ -86,6 +88,8 @@ void PlannerNode::init() {
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_points", 10);
 
     viewpoint_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
+    viewpoint_pub_2_ = this->create_publisher<geometry_msgs::msg::PoseArray>(topic_prefix+"/all_viewpoints", 10);
+
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
@@ -193,34 +197,53 @@ void PlannerNode::publish_gskel() {
 }
 
 void PlannerNode::publish_viewpoints() {
-    if (planner->GP.local_vpts.empty()) {
-        RCLCPP_INFO(this->get_logger(), "No Current Viewpoints!");
-        return;
+    // Publish refined local viewpoints (current path)
+    if (!planner->GP.local_vpts.empty()) {
+        nav_msgs::msg::Path path_msg;
+        path_msg.header.frame_id = global_frame_id;
+        path_msg.header.stamp = now();
+
+        std::queue<Viewpoint> queue_copy = planner->GP.local_vpts;
+        while (!queue_copy.empty()) {
+            const Viewpoint& vp = queue_copy.front();
+            geometry_msgs::msg::PoseStamped pose_msg;
+            pose_msg.header = path_msg.header;
+
+            pose_msg.pose.position.x = vp.position.x();
+            pose_msg.pose.position.y = vp.position.y();
+            pose_msg.pose.position.z = vp.position.z();
+
+            pose_msg.pose.orientation.x = vp.orientation.x();
+            pose_msg.pose.orientation.y = vp.orientation.y();
+            pose_msg.pose.orientation.z = vp.orientation.z();
+            pose_msg.pose.orientation.w = vp.orientation.w();
+        
+            path_msg.poses.push_back(pose_msg);
+            queue_copy.pop();
+        }
+        viewpoint_pub_->publish(path_msg);
     }
 
-    nav_msgs::msg::Path path_msg;
-    path_msg.header.frame_id = global_frame_id;
-    path_msg.header.stamp = now();
-
-    std::queue<Viewpoint> queue_copy = planner->GP.local_vpts;
-    while (!queue_copy.empty()) {
-        const Viewpoint& vp = queue_copy.front();
-        geometry_msgs::msg::PoseStamped pose_msg;
-        pose_msg.header = path_msg.header;
-
-        pose_msg.pose.position.x = vp.position.x();
-        pose_msg.pose.position.y = vp.position.y();
-        pose_msg.pose.position.z = vp.position.z();
-
-        pose_msg.pose.orientation.x = vp.orientation.x();
-        pose_msg.pose.orientation.y = vp.orientation.y();
-        pose_msg.pose.orientation.z = vp.orientation.z();
-        pose_msg.pose.orientation.w = vp.orientation.w();
+    // Publish all generated viewpoints
+    if (!planner->GP.global_vpts.empty()) {
+        geometry_msgs::msg::PoseArray gvps_msg;
+        gvps_msg.header.frame_id = global_frame_id;
+        gvps_msg.header.stamp = now();
     
-        path_msg.poses.push_back(pose_msg);
-        queue_copy.pop();
+        // for (const auto& vp : planner->GP.all_vpts) {
+        for (const auto& vp : planner->GP.global_vpts) {
+            geometry_msgs::msg::Pose vp_pose;
+            vp_pose.position.x = vp.position.x();
+            vp_pose.position.y = vp.position.y();
+            vp_pose.position.z = vp.position.z();
+            vp_pose.orientation.x = vp.orientation.x();
+            vp_pose.orientation.y = vp.orientation.y();
+            vp_pose.orientation.z = vp.orientation.z();
+            vp_pose.orientation.w = vp.orientation.w();
+            gvps_msg.poses.push_back(vp_pose);
+        }
+        viewpoint_pub_2_->publish(gvps_msg);    
     }
-    viewpoint_pub_->publish(path_msg);
 }
 
 void PlannerNode::init_path() {

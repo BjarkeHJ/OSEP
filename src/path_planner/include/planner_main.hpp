@@ -72,7 +72,8 @@ struct SkeletonVertex {
     bool freeze = false;
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     
-    int visited_cnt = 0; // Used for viewpoint generation #
+    bool updated = false;
+    int visited_cnt = 0;
     int invalid = false; // If no proper viewpoint can be generated??
 };
 
@@ -85,6 +86,7 @@ struct Viewpoint {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
     std::set<VoxelIndex> visible_voxels;
+    int corresp_vertex_id;
     double score = 0.0f;
     bool visited = false;
 };
@@ -115,6 +117,7 @@ struct GlobalPath {
     Viewpoint start;
     int curr_id;
 
+    std::vector<Viewpoint> all_vpts;
     std::vector<Viewpoint> global_vpts;
     std::queue<Viewpoint> local_vpts;
 };
@@ -156,26 +159,35 @@ private:
     
     /* Waypoint Generation and PathPlanning*/
     void viewpoint_sampling();
-    Viewpoint generate_viewpoint(int id, int id_next);
+    void viewpoint_filtering();
+    
+    void viewpoint_selection();
+    // Viewpoint generate_viewpoint(int id, int id_next);
+    std::vector<Viewpoint> generate_viewpoint(int id, int id_adj);
+    bool viewpoint_check(const Viewpoint& vp);
+    bool viewpoint_similarity(const Viewpoint& a, const Viewpoint& b);
+
+
     void score_viewpoint(Viewpoint &vp);    
     std::vector<int> find_next_toward_furthest_leaf(int start_id);
 
     /* Data */
     bool planner_flag = false;
+    int N_new_vers; // store number of new vertices for each iteration...
 
 
     /* Params */
     int max_obs_wo_conf = 2; // Maximum number of iters without passing conf check before discarding...
-    double fuse_dist_th = 3.0;
-    double fuse_conf_th = 0.2;
-    double kf_pn = 0.0001;
+    double fuse_dist_th = 2.5;
+    double fuse_conf_th = 0.1;
+    double kf_pn = 0.00001;
     double kf_mn = 0.1;
 
-    double voxel_size = 0.5;
+    double voxel_size = 1.0;
     double fov_h = 90;
     double fov_v = 60;
-    double max_view_dist = 20;
-    double min_view_dist = 5;
+    double max_view_dist = 12;
+    double min_view_dist = 10;
 };
 
 #endif //PLANNER_MAIN_

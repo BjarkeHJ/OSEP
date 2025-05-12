@@ -29,6 +29,7 @@ void PathPlanner::init() {
 
     GP.curr_id = -1;
     GS.gskel_size = 0;
+    N_new_vers = 0;
 }
 
 void PathPlanner::update_skeleton() {
@@ -38,10 +39,10 @@ void PathPlanner::update_skeleton() {
     graph_adj();
     smooth_vertex_positions();
     mst();
-    vertex_merge();
+    // vertex_merge();
     prune_branches();
 
-    int N_new_vers = (int)GS.global_vertices.size() - GS.gskel_size; // Number of new vertices added
+    N_new_vers = (int)GS.global_vertices.size() - GS.gskel_size; // Number of new vertices added
     RCLCPP_INFO(node_->get_logger(), "New Vertices: %d", N_new_vers);
 
     GS.gskel_size = (int)GS.global_vertices.size(); // Update total number of vertices
@@ -55,6 +56,11 @@ void PathPlanner::update_skeleton() {
 
 void PathPlanner::plan_path() {
     auto t_start = std::chrono::high_resolution_clock::now();
+    if (GS.global_vertices.size() < 2) {
+        RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Too few vertices to plan.");
+        return;
+    }
+
     // RUN GENERAL PATH PLANNING SELECTION ECT...
 
     // If: only first (start) vertex is found
@@ -65,9 +71,14 @@ void PathPlanner::plan_path() {
     // Wait for number of vertices before planning?
     
     // Sample Viewpoints
+
     viewpoint_sampling();
+    viewpoint_filtering();
+    // viewpoint_selection();
 
+    RCLCPP_INFO(node_->get_logger(), "Number of Viewpoints Generated: %d", (int)GP.global_vpts.size());
 
+    N_new_vers = 0; // Reset
 
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> t_elapsed = t_end - t_start;
@@ -247,21 +258,24 @@ void PathPlanner::smooth_vertex_positions() {
 }
 
 void PathPlanner::mst() {
+    double loop_min_length = 20.0;
     int N_ver = GS.global_vertices.size();
     if (N_ver == 0 || GS.global_adj.empty()) {
-        RCLCPP_WARN(node_->get_logger(), "Global skeleton is empty, cannot extract MST.");
+        RCLCPP_WARN(node_->get_logger(), "Global skeleton is empty, cannot extract relaxed MST.");
         return;
     }
 
     struct WeightedEdge {
         int u, v;
         double weight;
+        double raw_dist;
         bool operator<(const WeightedEdge& other) const { return weight < other.weight; }
     };
 
-    std::vector<WeightedEdge> mst_edges;
+    std::vector<WeightedEdge> all_edges;
 
     for (int i = 0; i < N_ver; ++i) {
+        GS.global_vertices[i].updated = false;
         const Eigen::Vector3d& pi = GS.global_vertices[i].position;
 
         for (int nb : GS.global_adj[i]) {
@@ -273,10 +287,8 @@ void PathPlanner::mst() {
             if (dist < 1e-3) continue;
             dir.normalize();
 
-            // Check linearity: compare direction with local tangent
             Eigen::Vector3d smooth_dir = Eigen::Vector3d::Zero();
             int count = 0;
-
             for (int nnb : GS.global_adj[i]) {
                 if (nnb == nb || nnb == i) continue;
                 Eigen::Vector3d neighbor_dir = GS.global_vertices[nnb].position - pi;
@@ -287,34 +299,33 @@ void PathPlanner::mst() {
             }
 
             if (count > 0) smooth_dir.normalize();
-
-            // Penalize direction changes
-            double angle_penalty = 10.0;
-            if (count > 0) {
-                double dot = dir.dot(smooth_dir);
-                angle_penalty = 1.0 + (1.0 - dot);  // favors alignment (dot=1)
-            }
+            double angle_penalty = (count > 0) ? 1.0 + (1.0 - dir.dot(smooth_dir)) : 10.0;
 
             double weighted_cost = dist * angle_penalty;
-
-            mst_edges.push_back({i, nb, weighted_cost});
+            all_edges.push_back({i, nb, weighted_cost, dist});
         }
     }
 
-    std::sort(mst_edges.begin(), mst_edges.end());
+    std::sort(all_edges.begin(), all_edges.end());
 
     UnionFind uf(N_ver);
-    std::vector<std::vector<int>> mst_adj(N_ver);
+    std::vector<std::vector<int>> relaxed_adj(N_ver);
 
-    for (const auto& edge : mst_edges) {
-        if (uf.unite(edge.u, edge.v)) {
-            mst_adj[edge.u].push_back(edge.v);
-            mst_adj[edge.v].push_back(edge.u);
+    for (const auto& edge : all_edges) {
+        bool merged = uf.unite(edge.u, edge.v);
+        if (merged) {
+            // standard MST edge
+            relaxed_adj[edge.u].push_back(edge.v);
+            relaxed_adj[edge.v].push_back(edge.u);
+        } else if (edge.raw_dist >= loop_min_length) {
+            // allow long loop edge
+            relaxed_adj[edge.u].push_back(edge.v);
+            relaxed_adj[edge.v].push_back(edge.u);
         }
+        // else skip short loops
     }
 
-    GS.global_adj = std::move(mst_adj);
-
+    GS.global_adj = std::move(relaxed_adj);
     graph_decomp();
 }
 
@@ -493,136 +504,147 @@ void PathPlanner::graph_decomp() {
     GS.leafs.clear();
 
     for (int i=0; i<(int)GS.global_vertices.size(); ++i) {
+        int prev_type = GS.global_vertices[i].type;
         int degree = GS.global_adj[i].size();
-
-        if (degree == 1) {
+        int new_type = 0;
+        
+        if (degree == 1) { // Leaf
             GS.leafs.push_back(i);
-            GS.global_vertices[i].type = 1;
+            // GS.global_vertices[i].type = 1;
+            new_type = 1;
         }
 
-        else if (degree == 2) {
-            GS.global_vertices[i].type = 2;
+        else if (degree == 2) { // branch
+            // GS.global_vertices[i].type = 2;
+            new_type = 2;
         }
 
-        else if (degree >= 2) {
+        else if (degree > 2) { // joint
             GS.joints.push_back(i);
-            GS.global_vertices[i].type = 3;
+            // GS.global_vertices[i].type = 3;
+            new_type = 3;
         }
 
-        else {
-            GS.global_vertices[i].type = 0;
-        }
+        // else { // Invalid
+        //     GS.global_vertices[i].type = 0;
+        // }
+
+        GS.global_vertices[i].type = new_type;
+
+        // Mark updated vertices if they are updated in this iteration
+        if (GS.global_vertices[i].updated) continue;
+        GS.global_vertices[i].updated = GS.global_vertices[i].updated || (GS.global_vertices[i].type != prev_type);
     }
 }
 
 
 /* Viewpoint Generation and Path Planning */
 void PathPlanner::viewpoint_sampling() {
-    if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
+    // if (N_new_vers == 0) return;
 
-    if (GS.global_vertices.size() < 5) {
-        RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Too few vertices to plan.");
-        return;
-    }
+    for (int i=0; i<GS.gskel_size; ++i) {
+        if (!GS.global_vertices[i].updated || GS.global_vertices[i].type == 0) continue;
 
-    if (GP.curr_id == -1) {
-        pcl::PointXYZ dpos(pose.position(0), pose.position(1), pose.position(2));
-        pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
-        vertex_tree.setInputCloud(GS.global_vertices_cloud);
+        int adj_id = GS.global_adj[i][0];
 
-        std::vector<int> id(1);
-        std::vector<float> sq_dist(1);
-        if (vertex_tree.nearestKSearch(dpos, 1, id, sq_dist) < 1) {
-            RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Nearest skeleton vertex not found.");
-            return;
-        }
-        GP.curr_id = id[0];
-        GP.vertex_nbs_id = GS.global_adj[GP.curr_id];
-
-        if (!GP.started) {
-            // Will only enter here the very first time...
-            RCLCPP_INFO(node_->get_logger(), "PathPlanning Initiated!");
-            
-            GP.vertex_start_id = GP.curr_id;
-            GP.started = true;
+        std::vector<Viewpoint> leaf_vps = generate_viewpoint(adj_id, i);
+        for (int i=0; i<(int)leaf_vps.size(); ++i) {
+            GP.global_vpts.push_back(leaf_vps[i]);
         }
     }
-
-
-    if ((int)GP.vertex_nbs_id.size() == 0) return;
-
-    int max_local_vpts = 10;
-
-    std::vector<int> target_branch = find_next_toward_furthest_leaf(GP.curr_id); // Seek furthest frontier
-    std::vector<Viewpoint> candidates;
-
-    for (int i=0; i+1<(int)target_branch.size(); ++i) {
-        Viewpoint vp = generate_viewpoint(target_branch[i], target_branch[i+1]);
-        candidates.push_back(vp);
-
-        if ((int)GP.local_vpts.size() < max_local_vpts) {
-            GS.global_vertices[i].visited_cnt++;
-            GP.local_vpts.push(candidates[i]);
-            GP.curr_id = target_branch[i];
-        }
-    }
-
-    // int i = 0;
-    // while ((int)GP.local_vpts.size() < max_local_vpts) {
-    //     if (!candidates[i].visited) {
-    //         GP.local_vpts.push(candidates[i++]);
-    //     }
-    // }
-
-
-
-    // Compare with current published viewpoint list?
-    // fallback
-    // If it get lost -> set GP.curr_id = -1 -> pick closest vertex
 }
 
-Viewpoint PathPlanner::generate_viewpoint(int id, int id_next) {
-    Viewpoint vp;
-    Eigen::Vector3d u;
+void PathPlanner::viewpoint_filtering() {
+    std::vector<Viewpoint> filtered;
+    for (const auto& vp : GP.global_vpts) {
+        if (!viewpoint_check(vp)) continue;
+        bool redundant = false;
+        for (const auto& kept : filtered) {
+            if (viewpoint_similarity(vp, kept)) {
+                redundant = true;
+                break;
+            }
+        }
+        if (!redundant) {
+            filtered.push_back(vp);
+        }
+    }
 
-    double disp_dist = 12;
+    GP.global_vpts = std::move(filtered);
+
+}
+
+
+void PathPlanner::viewpoint_selection() {
+
+
+}
+
+std::vector<Viewpoint> PathPlanner::generate_viewpoint(int id, int id_adj) {
+    double disp_dist = 15;
+    std::vector<Viewpoint> output_vps;
 
     const Eigen::Vector3d p1 = GS.global_vertices[id].position;
-    const Eigen::Vector3d p2 = GS.global_vertices[id_next].position;
+    const Eigen::Vector3d p2 = GS.global_vertices[id_adj].position;
     Eigen::Vector3d dir = p2 - p1;
-    if (dir.norm() < 1e-2) return Viewpoint{};
 
+    if (dir.norm() < 1e-2) return output_vps;
+    dir.normalize();
+    
     Eigen::Vector2d dir_xy = dir.head<2>();
-
     if (dir_xy.norm() > 0.5) {
         dir_xy.normalize();
         Eigen::Vector3d u1(-dir_xy.y(), dir_xy.x(), 0.0);
         Eigen::Vector3d u2(dir_xy.y(), -dir_xy.x(), 0.0);
-        double d1 = (pose.position - (p2 + u1)).squaredNorm();
-        double d2 = (pose.position - (p2 + u2)).squaredNorm();
-        u = (d1 < d2) ? u1 : u2;
+        u1.normalize();
+        u2.normalize();
+
+        Viewpoint vp1, vp2;
+        vp1.position = p1 + u1 * disp_dist;
+        vp2.position = p1 + u2 * disp_dist;
+
+        double yaw1, yaw2;
+        yaw1 = std::atan2(-u1.y(), -u1.x());
+        yaw2 = std::atan2(-u2.y(), -u2.x());
+        Eigen::AngleAxisd yaw1_rot(yaw1, Eigen::Vector3d::UnitZ());
+        Eigen::AngleAxisd yaw2_rot(yaw2, Eigen::Vector3d::UnitZ());
+        vp1.orientation = Eigen::Quaterniond(yaw1_rot);
+        vp2.orientation = Eigen::Quaterniond(yaw2_rot);
+
+        output_vps.push_back(vp1);
+        output_vps.push_back(vp2);
     }
-
-    else {
-        Eigen::Vector2d to_drone_xy = (pose.position.head<2>() - p2.head<2>());
-        if (to_drone_xy.norm() < 1e-2) return Viewpoint{};
-        to_drone_xy.normalize();
-        u = Eigen::Vector3d(to_drone_xy.x(), to_drone_xy.y(), 0.0);
-    }
-
-    const Eigen::Vector3d vp_pos = p2 + u * disp_dist;
-    const Eigen::Vector3d vp_ori = -u.normalized();
-
-    double yaw = std::atan2(vp_ori.y(), vp_ori.x());
-    Eigen::AngleAxisd yaw_rot(yaw, Eigen::Vector3d::UnitZ());
-
-    vp.position = vp_pos;
-    vp.orientation = Eigen::Quaterniond(yaw_rot);
-
-    //Scoring...
-    score_viewpoint(vp);
-    return vp;
+    return output_vps;
 }
+
+
+bool PathPlanner::viewpoint_check(const Viewpoint& vp) {
+    for (const auto& voxel : GS.voxels) {
+        Eigen::Vector3d voxel_center = {
+            (voxel.x + 0.5f) * voxel_size,
+            (voxel.y + 0.5f) * voxel_size,
+            (voxel.z + 0.5f) * voxel_size
+        };
+
+        if ((voxel_center - vp.position).norm() < min_view_dist) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool PathPlanner::viewpoint_similarity(const Viewpoint& a, const Viewpoint& b) {
+//     if ((a.position - b.position).norm() > fuse_dist_th) return false;
+//     else return true;
+
+    // return true if too close...
+    return ((a.position - b.position).norm() < fuse_dist_th * 0.8);
+}
+
+
+
+
+
 
 void PathPlanner::score_viewpoint(Viewpoint &vp) {
     if (GS.global_pts->empty()) {
@@ -768,46 +790,140 @@ void PathPlanner::global_cloud_handler() {
 }
 
 
+// void PathPlanner::viewpoint_selection() {
+//     if (!GS.global_vertices_cloud || GS.global_vertices_cloud->empty()) return;
 
+//     if (GP.curr_id == -1) {
+//         pcl::PointXYZ dpos(pose.position(0), pose.position(1), pose.position(2));
+//         pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
+//         vertex_tree.setInputCloud(GS.global_vertices_cloud);
 
-// std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id) {
-//     int max_depth = -1;
-//     std::vector<int> best_path;
-//     std::unordered_set<int> visited;
-//     std::vector<int> current_path;
-
-//     // Recursive depth first search
-//     std::function<void(int, int)> dfs = [&](int v, int depth) {
-//         visited.insert(v);
-//         current_path.push_back(v);
-//         const auto& node = GS.global_vertices[v];
-
-//         if (node.type == 1 && node.visited_cnt == 0) {
-//             if (depth > max_depth) {
-//                 max_depth = depth;
-//                 best_path = current_path;
-//             }
+//         std::vector<int> id(1);
+//         std::vector<float> sq_dist(1);
+//         if (vertex_tree.nearestKSearch(dpos, 1, id, sq_dist) < 1) {
+//             RCLCPP_WARN(node_->get_logger(), "[Select Viewpoints] Nearest skeleton vertex not found.");
+//             return;
 //         }
+//         GP.curr_id = id[0];
+//         GP.vertex_nbs_id = GS.global_adj[GP.curr_id];
 
-//         if (v < (int)GS.global_adj.size()) {
-//             for (int nb : GS.global_adj[v]) {
-//                 if (!visited.count(nb) && GS.global_vertices[nb].visited_cnt == 0) {
-//                     dfs(nb, depth + 1);
-//                 }
-//             }
+//         if (!GP.started) {
+//             // Will only enter here the very first time...
+//             RCLCPP_INFO(node_->get_logger(), "PathPlanning Initiated!");
+            
+//             GP.vertex_start_id = GP.curr_id;
+//             GP.started = true;
 //         }
+//     }
 
-//         current_path.pop_back();
-//     };
 
-//     dfs(start_id, 0);
+//     if ((int)GP.vertex_nbs_id.size() == 0) return;
 
-//     // If a valid path is found and has at least two nodes, return the second node (next step)
-//     // if (best_path.size() >= 2)
-//     //     return best_path;
+//     int max_local_vpts = 10;
 
-//     // return -1;  // No valid next step
+//     std::vector<int> target_branch = find_next_toward_furthest_leaf(GP.curr_id); // Seek furthest frontier
+//     std::vector<Viewpoint> candidates;
 
-//     return best_path;
+//     for (int i=0; i+1<(int)target_branch.size(); ++i) {
+//         Viewpoint vp = generate_viewpoint(target_branch[i], target_branch[i+1]);
+//         candidates.push_back(vp);
+
+//         if ((int)GP.local_vpts.size() < max_local_vpts) {
+//             GS.global_vertices[i].visited_cnt++;
+//             GP.local_vpts.push(candidates[i]);
+//             GP.curr_id = target_branch[i];
+//         }
+//     }
+
+//     // int i = 0;
+//     // while ((int)GP.local_vpts.size() < max_local_vpts) {
+//     //     if (!candidates[i].visited) {
+//     //         GP.local_vpts.push(candidates[i++]);
+//     //     }
+//     // }
+
+
+
+//     // Compare with current published viewpoint list?
+//     // fallback
+//     // If it get lost -> set GP.curr_id = -1 -> pick closest vertex
 // }
 
+
+
+
+
+
+// void PathPlanner::mst() {
+//     int N_ver = GS.global_vertices.size();
+//     if (N_ver == 0 || GS.global_adj.empty()) {
+//         RCLCPP_WARN(node_->get_logger(), "Global skeleton is empty, cannot extract MST.");
+//         return;
+//     }
+
+//     struct WeightedEdge {
+//         int u, v;
+//         double weight;
+//         bool operator<(const WeightedEdge& other) const { return weight < other.weight; }
+//     };
+
+//     std::vector<WeightedEdge> mst_edges;
+
+//     for (int i = 0; i < N_ver; ++i) {
+//         GS.global_vertices[i].updated = false; // Reset update flag for each vertex
+
+//         const Eigen::Vector3d& pi = GS.global_vertices[i].position;
+
+//         for (int nb : GS.global_adj[i]) {
+//             if (nb <= i) continue;
+
+//             const Eigen::Vector3d& pj = GS.global_vertices[nb].position;
+//             Eigen::Vector3d dir = pj - pi;
+//             double dist = dir.norm();
+//             if (dist < 1e-3) continue;
+//             dir.normalize();
+
+//             // Check linearity: compare direction with local tangent
+//             Eigen::Vector3d smooth_dir = Eigen::Vector3d::Zero();
+//             int count = 0;
+
+//             for (int nnb : GS.global_adj[i]) {
+//                 if (nnb == nb || nnb == i) continue;
+//                 Eigen::Vector3d neighbor_dir = GS.global_vertices[nnb].position - pi;
+//                 if (neighbor_dir.norm() > 1e-3) {
+//                     smooth_dir += neighbor_dir.normalized();
+//                     ++count;
+//                 }
+//             }
+
+//             if (count > 0) smooth_dir.normalize();
+
+//             // Penalize direction changes
+//             double angle_penalty = 10.0;
+//             if (count > 0) {
+//                 double dot = dir.dot(smooth_dir);
+//                 angle_penalty = 1.0 + (1.0 - dot);  // favors alignment (dot=1)
+//             }
+
+//             double weighted_cost = dist * angle_penalty;
+
+//             mst_edges.push_back({i, nb, weighted_cost});
+//         }
+//     }
+
+//     std::sort(mst_edges.begin(), mst_edges.end());
+
+//     UnionFind uf(N_ver);
+//     std::vector<std::vector<int>> mst_adj(N_ver);
+
+//     for (const auto& edge : mst_edges) {
+//         if (uf.unite(edge.u, edge.v)) {
+//             mst_adj[edge.u].push_back(edge.v);
+//             mst_adj[edge.v].push_back(edge.u);
+//         }
+//     }
+
+//     GS.global_adj = std::move(mst_adj);
+
+//     graph_decomp();
+// }
