@@ -48,6 +48,8 @@ public:
 
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr viewpoint_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_2_;
+
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr seen_voxels_pub_;
     
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr gskel_timer_;
@@ -61,6 +63,7 @@ private:
 
     bool update_skeleton_flag = false;
     bool planner_flag = false;
+    int run_cnt;
 
     int run_timer_ms = 50;
     int gskel_timer_ms = 50;
@@ -90,6 +93,8 @@ void PlannerNode::init() {
     viewpoint_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
     viewpoint_pub_2_ = this->create_publisher<geometry_msgs::msg::PoseArray>(topic_prefix+"/all_viewpoints", 10);
 
+    seen_voxels_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/seen_voxel", 10); // When a vpt is popped published the seen voxels 
+
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
@@ -106,6 +111,8 @@ void PlannerNode::init() {
     /* Modules */
     planner = std::make_shared<PathPlanner>(shared_from_this());
     planner->init();
+
+    run_cnt = 0;
 
     RCLCPP_INFO(this->get_logger(), "Done!");
 }
@@ -198,14 +205,13 @@ void PlannerNode::publish_gskel() {
 
 void PlannerNode::publish_viewpoints() {
     // Publish refined local viewpoints (current path)
-    if (!planner->GP.local_vpts.empty()) {
+    const auto& vpts = planner->GP.local_path;
+    if (!vpts.empty()) {
         nav_msgs::msg::Path path_msg;
         path_msg.header.frame_id = global_frame_id;
         path_msg.header.stamp = now();
 
-        std::queue<Viewpoint> queue_copy = planner->GP.local_vpts;
-        while (!queue_copy.empty()) {
-            const Viewpoint& vp = queue_copy.front();
+        for (const auto& vp : vpts) {
             geometry_msgs::msg::PoseStamped pose_msg;
             pose_msg.header = path_msg.header;
 
@@ -217,9 +223,8 @@ void PlannerNode::publish_viewpoints() {
             pose_msg.pose.orientation.y = vp.orientation.y();
             pose_msg.pose.orientation.z = vp.orientation.z();
             pose_msg.pose.orientation.w = vp.orientation.w();
-        
+
             path_msg.poses.push_back(pose_msg);
-            queue_copy.pop();
         }
         viewpoint_pub_->publish(path_msg);
     }
@@ -265,25 +270,26 @@ void PlannerNode::init_path() {
     fourth_vp.position = Eigen::Vector3d(170.0, 0.0, 120.0);
     fourth_vp.orientation = Eigen::Quaterniond::Identity();
 
-    planner->GP.local_vpts.push(first_vp);
-    planner->GP.local_vpts.push(second_vp);
-    planner->GP.local_vpts.push(third_vp);
-    planner->GP.local_vpts.push(fourth_vp);
+    planner->GP.local_path.push_back(first_vp);
+    planner->GP.local_path.push_back(second_vp);
+    planner->GP.local_path.push_back(third_vp);
+    planner->GP.local_path.push_back(fourth_vp);
 }
 
 void PlannerNode::drone_tracking() {
-    if (planner->GP.local_vpts.empty()) return;
-    double dist_check_th = 1.0;
+    if (planner->GP.local_path.empty()) return;
 
-    while (!planner->GP.local_vpts.empty()) {
-        const Viewpoint& current_next = planner->GP.local_vpts.front();
+    const double dist_check_th = 1.0;
+
+    while (!planner->GP.local_path.empty()) {
+        const Viewpoint& current_next = planner->GP.local_path.front();
         double distance_to_drone = (current_next.position - position).norm();
 
         if (distance_to_drone < dist_check_th) {
-            RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Popping from queue");
-            planner->GP.local_vpts.pop();
-        }
-        else {
+            RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Removing from path");
+            planner->GP.traced_path.push_back(planner->GP.local_path[0]); // Assign to traced path
+            planner->GP.local_path.erase(planner->GP.local_path.begin()); // Remove the first element
+        } else {
             break;
         }
     }
@@ -292,13 +298,13 @@ void PlannerNode::drone_tracking() {
 void PlannerNode::run() {
     if (!planner_flag) {
         /* Initial Flight to Structure (Predefined) */
-        if (planner->GP.local_vpts.empty()) {
+        if (planner->GP.local_path.empty()) {
             init_path(); // Set once     
         }
         
         if (!planner->local_vertices->empty()) {
             RCLCPP_INFO(this->get_logger(), "Recieved first vertices - Starting Planning!");
-            while (!planner->GP.local_vpts.empty()) planner->GP.local_vpts.pop();
+            planner->GP.local_path.clear();
             planner_flag = true;
         }
 
@@ -315,11 +321,14 @@ void PlannerNode::run() {
     }
 
     publish_gskel();
+    if (run_cnt >= 50) {
+        planner->pose = {position, orientation};
+        planner->plan_path();
+        drone_tracking();
+        publish_viewpoints();
+    }
 
-    planner->pose = {position, orientation};
-    planner->plan_path();
-    drone_tracking();
-    publish_viewpoints();
+    if (run_cnt <= 50) run_cnt++;
 }
 
 int main(int argc, char** argv) {

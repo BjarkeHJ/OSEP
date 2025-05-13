@@ -88,14 +88,16 @@ struct Viewpoint {
     std::set<VoxelIndex> visible_voxels;
     int corresp_vertex_id;
     double score = 0.0f;
+    bool locked = false;
     bool visited = false;
+    
 };
 
 struct GlobalSkeleton {
     std::unordered_set<VoxelIndex, VoxelIndexHash> voxels;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> voxel_point_count;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> seen_voxels;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts; // For visualizing
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
 
     std::vector<SkeletonVertex> prelim_vertices;
     std::vector<SkeletonVertex> global_vertices;
@@ -117,9 +119,9 @@ struct GlobalPath {
     Viewpoint start;
     int curr_id;
 
-    std::vector<Viewpoint> all_vpts;
     std::vector<Viewpoint> global_vpts;
-    std::queue<Viewpoint> local_vpts;
+    std::vector<Viewpoint> local_path; // Current local path being published
+    std::vector<Viewpoint> traced_path; // Add only when drone reaches the vpt
 };
 
 class PathPlanner {
@@ -161,15 +163,15 @@ private:
     void viewpoint_sampling();
     void viewpoint_filtering();
     
-    void viewpoint_selection();
-    // Viewpoint generate_viewpoint(int id, int id_next);
-    std::vector<Viewpoint> generate_viewpoint(int id, int id_adj);
-    bool viewpoint_check(const Viewpoint& vp);
+    void generate_path();
+    std::vector<Viewpoint> generate_viewpoint(int id);
+    std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, double disp_distance, int vertex_id);
+    bool viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree);
     bool viewpoint_similarity(const Viewpoint& a, const Viewpoint& b);
 
 
     void score_viewpoint(Viewpoint &vp);    
-    std::vector<int> find_next_toward_furthest_leaf(int start_id);
+    std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
 
     /* Data */
     bool planner_flag = false;
@@ -177,17 +179,19 @@ private:
 
 
     /* Params */
-    int max_obs_wo_conf = 2; // Maximum number of iters without passing conf check before discarding...
-    double fuse_dist_th = 3.0;
-    double fuse_conf_th = 0.1;
+    int max_obs_wo_conf = 3; // Maximum number of iters without passing conf check before discarding...
+    double fuse_dist_th = 2.0;
+    double fuse_conf_th = 0.5;
     double kf_pn = 0.00001;
     double kf_mn = 0.1;
 
     double voxel_size = 1.0;
     double fov_h = 90;
     double fov_v = 60;
-    double max_view_dist = 12;
-    double min_view_dist = 10;
+    double max_view_dist = 10;
+    double min_view_dist = 4;
+
+    double viewpoint_merge_dist = 3.0;
 };
 
 #endif //PLANNER_MAIN_
