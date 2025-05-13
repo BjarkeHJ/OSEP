@@ -279,7 +279,7 @@ void PlannerNode::init_path() {
 void PlannerNode::drone_tracking() {
     if (planner->GP.local_path.empty()) return;
 
-    const double dist_check_th = 1.0;
+    const double dist_check_th = 1.5;
 
     while (!planner->GP.local_path.empty()) {
         const Viewpoint& current_next = planner->GP.local_path.front();
@@ -287,6 +287,8 @@ void PlannerNode::drone_tracking() {
 
         if (distance_to_drone < dist_check_th) {
             RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Removing from path");
+            // planner->GP.local_path[0].visited = true;
+            planner->mark_viewpoint_visited(planner->GP.local_path[0]);
             planner->GP.traced_path.push_back(planner->GP.local_path[0]); // Assign to traced path
             planner->GP.local_path.erase(planner->GP.local_path.begin()); // Remove the first element
         } else {

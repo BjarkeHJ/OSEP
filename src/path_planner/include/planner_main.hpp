@@ -70,8 +70,8 @@ struct SkeletonVertex {
     int unconfirmed_check = 0;
     bool conf_check = false;
     bool freeze = false;
-    int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     
+    int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     bool updated = false;
     int visited_cnt = 0;
     int invalid = false; // If no proper viewpoint can be generated??
@@ -90,7 +90,6 @@ struct Viewpoint {
     double score = 0.0f;
     bool locked = false;
     bool visited = false;
-    
 };
 
 struct GlobalSkeleton {
@@ -114,10 +113,10 @@ struct GlobalSkeleton {
 struct GlobalPath {
     bool started = false;
     int vertex_start_id;
-    std::vector<int> vertex_nbs_id;
-
-    Viewpoint start;
     int curr_id;
+
+    std::vector<int> vertex_nbs_id;
+    Viewpoint start;
 
     std::vector<Viewpoint> global_vpts;
     std::vector<Viewpoint> local_path; // Current local path being published
@@ -134,6 +133,7 @@ public:
         
     /* Occupancy */
     void global_cloud_handler();
+    void mark_viewpoint_visited(const Viewpoint& reached_vp);
 
     /* Data */
     GlobalSkeleton GS;
@@ -173,8 +173,10 @@ private:
     void score_viewpoint(Viewpoint &vp);    
     std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
 
+
     /* Data */
     bool planner_flag = false;
+    bool first_plan = true;
     int N_new_vers; // store number of new vertices for each iteration...
 
 
@@ -188,9 +190,8 @@ private:
     double voxel_size = 1.0;
     double fov_h = 90;
     double fov_v = 60;
-    double max_view_dist = 10;
-    double min_view_dist = 4;
-
+    double max_view_dist = 25;
+    double min_view_dist = 8;
     double viewpoint_merge_dist = 3.0;
 };
 

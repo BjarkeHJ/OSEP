@@ -565,7 +565,7 @@ void PathPlanner::viewpoint_filtering() {
 
     std::vector<Viewpoint> filtered;
 
-    // Step 1: Always preserve locked viewpoints
+    // Step 1: Always preserve locked viewpoints --- ISSUE!!!
     for (const auto& vp : GP.global_vpts) {
         if (vp.locked) {
             filtered.push_back(vp);
@@ -575,9 +575,8 @@ void PathPlanner::viewpoint_filtering() {
     pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree;
     voxel_tree.setInputCloud(GS.global_pts);
 
-    // Step 2: Process only unlocked viewpoints
     for (const auto& vp : GP.global_vpts) {
-        if (vp.locked) continue;  // Already handled
+        if (vp.locked) continue; // --- ISSUE!!!
 
         if (!viewpoint_check(vp, voxel_tree)) continue;
 
@@ -612,89 +611,51 @@ void PathPlanner::viewpoint_filtering() {
     GP.global_vpts = std::move(filtered);
 }
 
-// void PathPlanner::viewpoint_filtering() {
-//     if (GS.global_pts->empty()) {
-//         GP.global_vpts.clear();
-//         RCLCPP_WARN(node_->get_logger(), "No VoxelMap - Skipping Viewpoint Generation");
-//         return;
-//     }
-
-//     std::vector<Viewpoint> filtered;
-//     pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree;
-//     voxel_tree.setInputCloud(GS.global_pts);
-
-//     for (const auto& vp : GP.global_vpts) {
-//         if (vp.locked) continue;
-
-//         if (!viewpoint_check(vp, voxel_tree)) continue;
-
-//         bool merged = false;
-//         for (auto& kept : filtered) {
-//             if (viewpoint_similarity(vp, kept)) {
-//                 // Merge vp into kept
-//                 kept.position = 0.5 * (kept.position + vp.position);
-
-//                 // Merge orientation (optional — here averaging direction vectors)
-//                 Eigen::Quaterniond qa(kept.orientation);
-//                 Eigen::Quaterniond qb(vp.orientation);
-//                 qa.normalize(); qb.normalize();
-//                 kept.orientation = qa.slerp(0.5, qb);
-
-//                 merged = true;
-//                 break;
-//             }
-//         }
-
-//         if (!merged) {
-//             filtered.push_back(vp);
-//         }
-//     }
-
-//     GP.global_vpts = std::move(filtered);
-// }
-
-
 void PathPlanner::generate_path() {
     if (GS.global_vertices.empty() || GP.global_vpts.empty()) return;
 
-    GP.local_path.clear();
+    const int N_max = 5;
+    int diff = N_max - GP.local_path.size();
+    if (diff == 0) return;
 
-    // --- Find closest skeleton vertex to drone
-    pcl::PointXYZ current_pos(pose.position.x(), pose.position.y(), pose.position.z());
-    pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
-    vertex_tree.setInputCloud(GS.global_vertices_cloud);
-    std::vector<int> nearest_id(1);
-    std::vector<float> sq_dist(1);
-    if (vertex_tree.nearestKSearch(current_pos, 1, nearest_id, sq_dist) < 1) {
-        RCLCPP_WARN(node_->get_logger(), "No nearby skeleton vertex found...");
-        return;
+    // --- Find closest skeleton vertex to drone to initialize
+    if (first_plan) {
+        pcl::PointXYZ current_pos(pose.position.x(), pose.position.y(), pose.position.z());
+        pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
+        vertex_tree.setInputCloud(GS.global_vertices_cloud);
+        std::vector<int> nearest_id(1);
+        std::vector<float> sq_dist(1);
+        if (vertex_tree.nearestKSearch(current_pos, 1, nearest_id, sq_dist) < 1) {
+            RCLCPP_WARN(node_->get_logger(), "No nearby skeleton vertex found...");
+            return;
+        }
+        GP.curr_id = nearest_id[0];
+        first_plan = false;
     }
-    int start_id = nearest_id[0];
 
     // --- Plan forward path
     const int max_steps = 50;
-    std::vector<int> local_path_ids = find_next_toward_furthest_leaf(start_id, max_steps);
+    std::vector<int> local_path_ids = find_next_toward_furthest_leaf(GP.curr_id, max_steps);
     if (local_path_ids.empty()) {
         RCLCPP_WARN(node_->get_logger(), "Could not generate local path...");
         return;
     }
     std::unordered_set<int> path_vertex_set(local_path_ids.begin(), local_path_ids.end());
 
-    // --- Get drone XY direction (forward facing)
+    // --- Get drone facing direction
     Eigen::Vector3d drone_dir_3d = pose.orientation * Eigen::Vector3d::UnitX();
     Eigen::Vector2d drone_dir_xy = drone_dir_3d.head<2>().normalized();
     Eigen::Vector3d drone_pos = pose.position;
+    const double cos_90deg = std::cos(2 * M_PI / 3.0);
 
-    const double cos_90deg = std::cos(M_PI / 2.0);  // 0.0
-
-    // --- Score and filter candidate viewpoints
+    // --- Score and filter valid candidate viewpoints
     std::vector<Viewpoint> candidate_vpts;
     for (auto& vp : GP.global_vpts) {
+        if (vp.visited) continue;
         if (!path_vertex_set.count(vp.corresp_vertex_id)) continue;
 
         Eigen::Vector3d vp_facing = vp.orientation * Eigen::Vector3d::UnitX();
         Eigen::Vector2d vp_dir_xy = vp_facing.head<2>().normalized();
-
         double cos_angle = drone_dir_xy.dot(vp_dir_xy);
         if (cos_angle < cos_90deg) continue;
 
@@ -707,30 +668,66 @@ void PathPlanner::generate_path() {
         return;
     }
 
-    // --- Sort by score and take top N
+    // --- Sort candidates by score
     std::sort(candidate_vpts.begin(), candidate_vpts.end(),
-              [](const Viewpoint& a, const Viewpoint& b) { return a.score > b.score; });
+              [](const Viewpoint& a, const Viewpoint& b) {
+                  return a.score > b.score;
+              });
 
-    const int N_max = 5;
+    // --- Reference point is last in current path, or drone position if empty
+    Eigen::Vector3d ref_pos = drone_pos;
+    if (!GP.local_path.empty()) {
+        ref_pos = GP.local_path.back().position;
+    }
+
+    // --- Select new viewpoints extending from ref_pos
     std::vector<Viewpoint> selected_vpts;
     for (auto& vp : candidate_vpts) {
-        if ((int)selected_vpts.size() >= N_max) break;
+        if ((int)selected_vpts.size() >= diff) break;
+    
+        double dist_to_ref = (vp.position - ref_pos).norm();
+        // if (dist_to_ref < viewpoint_merge_dist || dist_to_ref > 5 * viewpoint_merge_dist) continue;
+        if (dist_to_ref < viewpoint_merge_dist) continue;
+    
+        // Ensure new vp is not too close to any in the existing path
+        bool too_close = false;
+        for (const auto& existing : GP.local_path) {
+            if ((vp.position - existing.position).norm() < 0.8 * viewpoint_merge_dist) {
+                too_close = true;
+                break;
+            }
+        }
+        if (too_close) continue;
+    
         vp.locked = true;
         selected_vpts.push_back(vp);
     }
 
-    // --- Sort selected viewpoints by distance from drone
+    // --- Sort new points by distance from drone (for traceability)
     std::sort(selected_vpts.begin(), selected_vpts.end(),
               [&](const Viewpoint& a, const Viewpoint& b) {
                   return (a.position - drone_pos).norm() < (b.position - drone_pos).norm();
               });
 
-    // --- Final local path
-    GP.local_path = std::move(selected_vpts);
+    // --- Append to local path
+    if (!selected_vpts.empty()) {
+        GP.local_path.insert(GP.local_path.end(), selected_vpts.begin(), selected_vpts.end());
+
+        // Sort the full path by distance from drone
+        std::sort(GP.local_path.begin(), GP.local_path.end(),
+                  [&](const Viewpoint& a, const Viewpoint& b) {
+                      return (a.position - drone_pos).norm() < (b.position - drone_pos).norm();
+                  });
+
+        // Update for continuation
+        GP.curr_id = GP.local_path.back().corresp_vertex_id;
+    }
 }
 
+
 std::vector<Viewpoint> PathPlanner::generate_viewpoint(int id) {
-    double disp_dist = 6;
+    // double disp_dist = 6;
+    double disp_dist = 12;
     std::vector<Viewpoint> output_vps;
 
     if (GS.global_vertices[id].type == 1) {
@@ -981,6 +978,15 @@ std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id, int m
     return best_path;
 }
 
+void PathPlanner::mark_viewpoint_visited(const Viewpoint& reached_vp) {
+    for (auto& vp : GP.global_vpts) {
+        if ((vp.position - reached_vp.position).norm() < viewpoint_merge_dist &&
+            vp.orientation.angularDistance(reached_vp.orientation) < 0.1) {
+            vp.visited = true;
+        }
+    }
+}
+
 
 
 /* Voxel Grid Map */
@@ -1131,4 +1137,141 @@ void PathPlanner::global_cloud_handler() {
 
 //     dfs(start_id, 0);
 //     return best_path;
+// }
+
+
+// void PathPlanner::viewpoint_filtering() {
+//     if (GS.global_pts->empty()) {
+//         GP.global_vpts.clear();
+//         RCLCPP_WARN(node_->get_logger(), "No VoxelMap - Skipping Viewpoint Generation");
+//         return;
+//     }
+
+//     std::vector<Viewpoint> filtered;
+//     pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree;
+//     voxel_tree.setInputCloud(GS.global_pts);
+
+//     for (const auto& vp : GP.global_vpts) {
+//         if (vp.locked) continue;
+
+//         if (!viewpoint_check(vp, voxel_tree)) continue;
+
+//         bool merged = false;
+//         for (auto& kept : filtered) {
+//             if (viewpoint_similarity(vp, kept)) {
+//                 // Merge vp into kept
+//                 kept.position = 0.5 * (kept.position + vp.position);
+
+//                 // Merge orientation (optional — here averaging direction vectors)
+//                 Eigen::Quaterniond qa(kept.orientation);
+//                 Eigen::Quaterniond qb(vp.orientation);
+//                 qa.normalize(); qb.normalize();
+//                 kept.orientation = qa.slerp(0.5, qb);
+
+//                 merged = true;
+//                 break;
+//             }
+//         }
+
+//         if (!merged) {
+//             filtered.push_back(vp);
+//         }
+//     }
+
+//     GP.global_vpts = std::move(filtered);
+// }
+
+
+
+
+// void PathPlanner::generate_path() {
+//     if (GS.global_vertices.empty() || GP.global_vpts.empty()) return;
+
+//     const int N_max = 5; // max number of point in local path
+
+//     int diff = N_max - GP.local_path.size();
+//     if (diff == 0) return; // Wait for first waypoint to be reached
+
+//     // --- Find closest skeleton vertex to drone to initialize
+//     if (first_plan) {
+//         pcl::PointXYZ current_pos(pose.position.x(), pose.position.y(), pose.position.z());
+//         pcl::KdTreeFLANN<pcl::PointXYZ> vertex_tree;
+//         vertex_tree.setInputCloud(GS.global_vertices_cloud);
+//         std::vector<int> nearest_id(1);
+//         std::vector<float> sq_dist(1);
+//         if (vertex_tree.nearestKSearch(current_pos, 1, nearest_id, sq_dist) < 1) {
+//             RCLCPP_WARN(node_->get_logger(), "No nearby skeleton vertex found...");
+//             return;
+//         }
+//         GP.curr_id = nearest_id[0];
+//         first_plan = false;
+//     }
+
+//     // --- Plan forward path
+//     const int max_steps = 50;
+//     std::vector<int> local_path_ids = find_next_toward_furthest_leaf(GP.curr_id, max_steps);
+//     if (local_path_ids.empty()) {
+//         RCLCPP_WARN(node_->get_logger(), "Could not generate local path...");
+//         return;
+//     }
+//     std::unordered_set<int> path_vertex_set(local_path_ids.begin(), local_path_ids.end());
+
+//     // --- Get drone XY direction (forward facing)
+//     Eigen::Vector3d drone_dir_3d = pose.orientation * Eigen::Vector3d::UnitX();
+//     Eigen::Vector2d drone_dir_xy = drone_dir_3d.head<2>().normalized();
+//     Eigen::Vector3d drone_pos = pose.position;
+
+//     const double cos_90deg = std::cos(M_PI / 2.0);  // 0.0
+
+//     // --- Score and filter candidate viewpoints
+//     std::vector<Viewpoint> candidate_vpts;
+//     for (auto& vp : GP.global_vpts) {
+//         if (vp.visited) continue;
+//         if (!path_vertex_set.count(vp.corresp_vertex_id)) continue;
+
+//         Eigen::Vector3d vp_facing = vp.orientation * Eigen::Vector3d::UnitX();
+//         Eigen::Vector2d vp_dir_xy = vp_facing.head<2>().normalized();
+
+//         double cos_angle = drone_dir_xy.dot(vp_dir_xy);
+//         if (cos_angle < cos_90deg) continue;
+
+//         score_viewpoint(vp);
+//         candidate_vpts.push_back(vp);
+//     }
+
+//     if (candidate_vpts.empty()) {
+//         RCLCPP_WARN(node_->get_logger(), "No valid viewpoints aligned with current drone orientation.");
+//         return;
+//     }
+
+//     // --- Sort by score and take top N
+//     std::sort(candidate_vpts.begin(), candidate_vpts.end(),
+//               [](const Viewpoint& a, const Viewpoint& b) { return a.score > b.score; });
+
+//     std::vector<Viewpoint> selected_vpts;
+//     for (auto& vp : candidate_vpts) {
+//         if ((int)selected_vpts.size() >= diff) break;
+//         vp.locked = true;
+//         selected_vpts.push_back(vp);
+//     }
+
+//     // --- Sort selected viewpoints by distance from drone
+//     std::sort(selected_vpts.begin(), selected_vpts.end(),
+//               [&](const Viewpoint& a, const Viewpoint& b) {
+//                   return (a.position - drone_pos).norm() < (b.position - drone_pos).norm();
+//               });
+
+//     // --- Append new viewpoints and maintain distance order
+//     if (!selected_vpts.empty()) {
+//         GP.local_path.insert(GP.local_path.end(), selected_vpts.begin(), selected_vpts.end());
+
+//         // Re-sort entire path by increasing distance from drone
+//         std::sort(GP.local_path.begin(), GP.local_path.end(),
+//                 [&](const Viewpoint& a, const Viewpoint& b) {
+//                     return (a.position - drone_pos).norm() < (b.position - drone_pos).norm();
+//                 });
+
+//         // Continue from the farthest selected viewpoint
+//         GP.curr_id = GP.local_path.back().corresp_vertex_id;
+//     }
 // }
