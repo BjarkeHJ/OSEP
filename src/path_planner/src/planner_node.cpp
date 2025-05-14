@@ -33,8 +33,11 @@ public:
 
     void publish_gskel();
     void publish_viewpoints();
+    void publish_path();
     void init_path();
     void drone_tracking();
+    void adjust_viewpoints(const nav_msgs::msg::Path::SharedPtr adjusted_vpts);
+    void publish_adjusted_path();
 
     void run();
 
@@ -46,27 +49,34 @@ public:
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
-    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr viewpoint_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_2_;
-
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
+    
+    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr adjusted_vpts_sub_;
+    
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr seen_voxels_pub_;
     
     rclcpp::TimerBase::SharedPtr run_timer_;
     rclcpp::TimerBase::SharedPtr gskel_timer_;
     rclcpp::TimerBase::SharedPtr viewpoints_timer_;
     
-private:
+    private:
 
+    std::mutex path_mutex_;
+    std::condition_variable path_cv_;
+    bool got_adjustment_ = false;
+    
     std::string topic_prefix = "/osep";
 
     std::shared_ptr<PathPlanner> planner;
 
     bool update_skeleton_flag = false;
     bool planner_flag = false;
+    bool wait_for_adjusted_vpts = false;
     int run_cnt;
 
-    int run_timer_ms = 50;
-    int gskel_timer_ms = 50;
+    int run_timer_ms = 100;
+    int gskel_timer_ms = 100;
     int viewpoints_timer_ms = 500;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices;
@@ -90,10 +100,11 @@ void PlannerNode::init() {
     adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(topic_prefix+"/adjacency_graph", 10);
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_points", 10);
 
-    viewpoint_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
-    viewpoint_pub_2_ = this->create_publisher<geometry_msgs::msg::PoseArray>(topic_prefix+"/all_viewpoints", 10);
+    path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
+    viewpoint_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>(topic_prefix+"/all_viewpoints", 10);
 
     seen_voxels_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/seen_voxel", 10); // When a vpt is popped published the seen voxels 
+    adjusted_vpts_sub_ = this->create_subscription<nav_msgs::msg::Path>("/planner/viewpoints_adjusted", 10, std::bind(&PlannerNode::adjust_viewpoints, this, std::placeholders::_1)); 
 
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
@@ -204,7 +215,31 @@ void PlannerNode::publish_gskel() {
 }
 
 void PlannerNode::publish_viewpoints() {
-    // Publish refined local viewpoints (current path)
+    // Publish all generated viewpoints
+    if (!planner->GP.global_vpts.empty()) {
+        geometry_msgs::msg::PoseArray gvps_msg;
+        gvps_msg.header.frame_id = global_frame_id;
+        gvps_msg.header.stamp = now();
+    
+        // for (const auto& vp : planner->GP.all_vpts) {
+        for (const auto& vp : planner->GP.global_vpts) {
+            geometry_msgs::msg::Pose vp_pose;
+            vp_pose.position.x = vp.position.x();
+            vp_pose.position.y = vp.position.y();
+            vp_pose.position.z = vp.position.z();
+            vp_pose.orientation.x = vp.orientation.x();
+            vp_pose.orientation.y = vp.orientation.y();
+            vp_pose.orientation.z = vp.orientation.z();
+            vp_pose.orientation.w = vp.orientation.w();
+            gvps_msg.poses.push_back(vp_pose);
+        }
+        viewpoint_pub_->publish(gvps_msg);    
+    }
+}
+
+void PlannerNode::publish_path() {
+    std::lock_guard<std::mutex> lock(path_mutex_); //Protect access to your internal path buffer
+
     const auto& vpts = planner->GP.local_path;
     if (!vpts.empty()) {
         nav_msgs::msg::Path path_msg;
@@ -226,30 +261,29 @@ void PlannerNode::publish_viewpoints() {
 
             path_msg.poses.push_back(pose_msg);
         }
-        viewpoint_pub_->publish(path_msg);
-    }
-
-    // Publish all generated viewpoints
-    if (!planner->GP.global_vpts.empty()) {
-        geometry_msgs::msg::PoseArray gvps_msg;
-        gvps_msg.header.frame_id = global_frame_id;
-        gvps_msg.header.stamp = now();
-    
-        // for (const auto& vp : planner->GP.all_vpts) {
-        for (const auto& vp : planner->GP.global_vpts) {
-            geometry_msgs::msg::Pose vp_pose;
-            vp_pose.position.x = vp.position.x();
-            vp_pose.position.y = vp.position.y();
-            vp_pose.position.z = vp.position.z();
-            vp_pose.orientation.x = vp.orientation.x();
-            vp_pose.orientation.y = vp.orientation.y();
-            vp_pose.orientation.z = vp.orientation.z();
-            vp_pose.orientation.w = vp.orientation.w();
-            gvps_msg.poses.push_back(vp_pose);
-        }
-        viewpoint_pub_2_->publish(gvps_msg);    
+        path_pub_->publish(path_msg);
     }
 }
+
+void PlannerNode::publish_adjusted_path() {
+    std::lock_guard<std::mutex> lk(path_mutex_);
+    nav_msgs::msg::Path msg;
+    msg.header.frame_id = global_frame_id;
+    msg.header.stamp = now();
+    for (auto const &vp : planner->GP.local_path) {
+      geometry_msgs::msg::PoseStamped ps;
+      ps.header = msg.header;
+      ps.pose.position.x = vp.position.x();
+      ps.pose.position.y = vp.position.y();
+      ps.pose.position.z = vp.position.z();
+      ps.pose.orientation.x = vp.orientation.x();
+      ps.pose.orientation.y = vp.orientation.y();
+      ps.pose.orientation.z = vp.orientation.z();
+      ps.pose.orientation.w = vp.orientation.w();
+      msg.poses.push_back(ps);
+    }
+    path_pub_->publish(msg);
+  }
 
 void PlannerNode::init_path() {
     // Guiding the drone towards the structure
@@ -277,24 +311,60 @@ void PlannerNode::init_path() {
 }
 
 void PlannerNode::drone_tracking() {
-    if (planner->GP.local_path.empty()) return;
+    // if (planner->GP.local_path.empty()) return;
 
-    const double dist_check_th = 1.5;
+    // const double dist_check_th = 1.5;
 
-    while (!planner->GP.local_path.empty()) {
-        const Viewpoint& current_next = planner->GP.local_path.front();
-        double distance_to_drone = (current_next.position - position).norm();
+    // while (!planner->GP.local_path.empty()) {
+    //     const Viewpoint& current_next = planner->GP.local_path.front();
+    //     double distance_to_drone = (current_next.position - position).norm();
 
+    //     if (distance_to_drone < dist_check_th) {
+    //         RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Removing from path");
+    //         // planner->GP.local_path[0].visited = true;
+    //         planner->mark_viewpoint_visited(planner->GP.local_path[0]);
+    //         planner->GP.traced_path.push_back(planner->GP.local_path[0]); // Assign to traced path
+    //         planner->GP.local_path.erase(planner->GP.local_path.begin()); // Remove the first element
+    //     } else {
+    //         break;
+    //     }
+    // }
+
+    if (planner->GP.adjusted_path.empty()) return;
+
+    const double dist_check_th = 2.0;
+
+    for (int i=0; i<(int)planner->GP.adjusted_path.size(); ++i) {
+        Viewpoint target = planner->GP.adjusted_path[i];
+        double distance_to_drone = (target.position - position).norm();
         if (distance_to_drone < dist_check_th) {
-            RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Removing from path");
-            // planner->GP.local_path[0].visited = true;
-            planner->mark_viewpoint_visited(planner->GP.local_path[0]);
-            planner->GP.traced_path.push_back(planner->GP.local_path[0]); // Assign to traced path
-            planner->GP.local_path.erase(planner->GP.local_path.begin()); // Remove the first element
-        } else {
-            break;
+            planner->GP.traced_path.push_back(planner->GP.adjusted_path[i]);
+            planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin() + i);
+            planner->GP.local_path.erase(planner->GP.local_path.begin() + i);
         }
     }
+}
+
+void PlannerNode::adjust_viewpoints(const nav_msgs::msg::Path::SharedPtr adjusted_vpts) {
+    planner->GP.adjusted_path.clear();
+    planner->GP.adjusted_path.reserve(adjusted_vpts->poses.size());
+    for (const auto& ps : adjusted_vpts->poses) {
+        Viewpoint vp;
+        vp.position = Eigen::Vector3d(
+                    ps.pose.position.x,
+                    ps.pose.position.y,
+                    ps.pose.position.z
+        );
+        vp.orientation = Eigen::Quaterniond(
+                        ps.pose.orientation.w,
+                        ps.pose.orientation.x,
+                        ps.pose.orientation.y,
+                        ps.pose.orientation.z
+        );
+
+        planner->GP.adjusted_path.push_back(vp);
+    }
+    RCLCPP_INFO(this->get_logger(), "Adjusted Viewpoints!");
 }
 
 void PlannerNode::run() {
@@ -315,19 +385,19 @@ void PlannerNode::run() {
         return;
     }
 
-    RCLCPP_INFO(this->get_logger(), "Updating Skeleton and Planning Path");
-
     if (update_skeleton_flag) {
         update_skeleton_flag = false;
         planner->update_skeleton();
     }
 
     publish_gskel();
+    publish_viewpoints();
+
     if (run_cnt >= 50) {
         planner->pose = {position, orientation};
         planner->plan_path();
         drone_tracking();
-        publish_viewpoints();
+        publish_path();
     }
 
     if (run_cnt <= 50) run_cnt++;

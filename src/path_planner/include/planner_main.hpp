@@ -10,7 +10,6 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <Eigen/Core>
 
-
 struct VoxelIndex {
     int x, y, z;
     bool operator==(const VoxelIndex &other) const {
@@ -63,6 +62,11 @@ struct UnionFind {
     }
 };
 
+struct DronePose {
+    Eigen::Vector3d position;
+    Eigen::Quaterniond orientation;
+};
+
 struct SkeletonVertex {
     Eigen::Vector3d position;
     Eigen::Matrix3d covariance;
@@ -77,10 +81,6 @@ struct SkeletonVertex {
     int invalid = false; // If no proper viewpoint can be generated??
 };
 
-struct DronePose {
-    Eigen::Vector3d position;
-    Eigen::Quaterniond orientation;
-};
 
 struct Viewpoint {
     Eigen::Vector3d position;
@@ -120,6 +120,7 @@ struct GlobalPath {
 
     std::vector<Viewpoint> global_vpts;
     std::vector<Viewpoint> local_path; // Current local path being published
+    std::vector<Viewpoint> adjusted_path;
     std::vector<Viewpoint> traced_path; // Add only when drone reaches the vpt
 };
 
@@ -162,23 +163,21 @@ private:
     /* Waypoint Generation and PathPlanning*/
     void viewpoint_sampling();
     void viewpoint_filtering();
-    
     void generate_path();
+
+
     std::vector<Viewpoint> generate_viewpoint(int id);
     std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, double disp_distance, int vertex_id);
-    bool viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree);
+    bool viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ>& voxel_tree);
     bool viewpoint_similarity(const Viewpoint& a, const Viewpoint& b);
-
-
     void score_viewpoint(Viewpoint &vp);    
     std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
-
 
     /* Data */
     bool planner_flag = false;
     bool first_plan = true;
     int N_new_vers; // store number of new vertices for each iteration...
-
+    int horizon_max = 5;
 
     /* Params */
     int max_obs_wo_conf = 3; // Maximum number of iters without passing conf check before discarding...
@@ -191,8 +190,13 @@ private:
     double fov_h = 90;
     double fov_v = 60;
     double max_view_dist = 25;
-    double min_view_dist = 8;
+    double safe_dist = 8;
     double viewpoint_merge_dist = 3.0;
+
+    static constexpr int UNVISITED = -2;
+    static constexpr int NOISE     = -1;
+
 };
+
 
 #endif //PLANNER_MAIN_

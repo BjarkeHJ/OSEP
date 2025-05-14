@@ -293,7 +293,6 @@ void PathPlanner::mst() {
     graph_decomp();
 }
 
-
 void PathPlanner::vertex_merge() {
     auto is_joint = [&](int idx) {
         return std::find(GS.joints.begin(), GS.joints.end(), idx) != GS.joints.end();
@@ -503,6 +502,7 @@ void PathPlanner::graph_decomp() {
 }
 
 
+
 /* Viewpoint Generation and Path Planning */
 void PathPlanner::viewpoint_sampling() {
     // if (N_new_vers == 0) return;
@@ -527,21 +527,13 @@ void PathPlanner::viewpoint_filtering() {
     }
 
     std::vector<Viewpoint> filtered;
-
-    // Step 1: Always preserve locked viewpoints --- ISSUE!!!
-    for (const auto& vp : GP.global_vpts) {
-        if (vp.locked) {
-            filtered.push_back(vp);
-        }
-    }
-
     pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree;
     voxel_tree.setInputCloud(GS.global_pts);
 
     for (const auto& vp : GP.global_vpts) {
-        if (vp.locked) continue; // --- ISSUE!!!
+        if (!viewpoint_check(vp, voxel_tree)) continue; // Viewpoint too close to voxel -- discard
 
-        if (!viewpoint_check(vp, voxel_tree)) continue;
+        if (vp.locked) continue; // Viewpoint locked -> Will not merge
 
         bool discard = false;
         bool merged = false;
@@ -577,8 +569,7 @@ void PathPlanner::viewpoint_filtering() {
 void PathPlanner::generate_path() {
     if (GS.global_vertices.empty() || GP.global_vpts.empty()) return;
 
-    const int N_max = 5;
-    int diff = N_max - GP.local_path.size();
+    int diff = horizon_max - GP.local_path.size();
     if (diff == 0) return;
 
     // --- Find closest skeleton vertex to drone to initialize
@@ -687,10 +678,9 @@ void PathPlanner::generate_path() {
     }
 }
 
-
 std::vector<Viewpoint> PathPlanner::generate_viewpoint(int id) {
     // double disp_dist = 6;
-    double disp_dist = 12;
+    double disp_dist = 15;
     std::vector<Viewpoint> output_vps;
 
     if (GS.global_vertices[id].type == 1) {
@@ -814,11 +804,11 @@ std::vector<Viewpoint> PathPlanner::vp_sample(const Eigen::Vector3d& origin, con
     return viewpoints;
 }
 
-bool PathPlanner::viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ> voxel_tree) {
+bool PathPlanner::viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ>& voxel_tree) {
     std::vector<int> ids;
     std::vector<float> dsq;
     pcl::PointXYZ query_point(vp.position.x(), vp.position.y(), vp.position.z());
-    if (voxel_tree.radiusSearch(query_point, min_view_dist, ids, dsq) > 0) {
+    if (voxel_tree.radiusSearch(query_point, safe_dist, ids, dsq) > 0) {
         return false;
     }
     return true;
@@ -855,7 +845,7 @@ void PathPlanner::score_viewpoint(Viewpoint &vp) {
         Eigen::Vector3d vec = target - vp.position;
 
         double dist = vec.norm();
-        if (dist < min_view_dist || dist > max_view_dist) continue;
+        if (dist < safe_dist || dist > max_view_dist) continue;
 
         Eigen::Vector3d dir = vec.normalized();
         double cos_angle_h = dir.dot(cam_dir);
@@ -941,7 +931,10 @@ std::vector<int> PathPlanner::find_next_toward_furthest_leaf(int start_id, int m
     return best_path;
 }
 
+
+
 void PathPlanner::mark_viewpoint_visited(const Viewpoint& reached_vp) {
+    /* Used in PlannerNode */
     for (auto& vp : GP.global_vpts) {
         if ((vp.position - reached_vp.position).norm() < viewpoint_merge_dist &&
             vp.orientation.angularDistance(reached_vp.orientation) < 0.1) {
@@ -950,10 +943,7 @@ void PathPlanner::mark_viewpoint_visited(const Viewpoint& reached_vp) {
     }
 }
 
-
-
 /* Voxel Grid Map */
-
 void PathPlanner::global_cloud_handler() {
     for (const auto &pt : local_pts->points) {
         if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) continue;
