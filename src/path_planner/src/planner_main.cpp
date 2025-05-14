@@ -264,53 +264,14 @@ void PathPlanner::mst() {
         return;
     }
 
-    struct WeightedEdge {
-        int u, v;
-        double weight;
-        bool operator<(const WeightedEdge& other) const { return weight < other.weight; }
-    };
-
-    std::vector<WeightedEdge> mst_edges;
-
+    std::vector<Edge> mst_edges;
     for (int i = 0; i < N_ver; ++i) {
-        GS.global_vertices[i].updated = false; // Reset update flag for each vertex
-
-        const Eigen::Vector3d& pi = GS.global_vertices[i].position;
-
         for (int nb : GS.global_adj[i]) {
-            if (nb <= i) continue;
-
-            const Eigen::Vector3d& pj = GS.global_vertices[nb].position;
-            Eigen::Vector3d dir = pj - pi;
-            double dist = dir.norm();
-            if (dist < 1e-3) continue;
-            dir.normalize();
-
-            // Check linearity: compare direction with local tangent
-            Eigen::Vector3d smooth_dir = Eigen::Vector3d::Zero();
-            int count = 0;
-
-            for (int nnb : GS.global_adj[i]) {
-                if (nnb == nb || nnb == i) continue;
-                Eigen::Vector3d neighbor_dir = GS.global_vertices[nnb].position - pi;
-                if (neighbor_dir.norm() > 1e-3) {
-                    smooth_dir += neighbor_dir.normalized();
-                    ++count;
-                }
-            }
-
-            if (count > 0) smooth_dir.normalize();
-
-            // Penalize direction changes
-            double angle_penalty = 10.0;
-            if (count > 0) {
-                double dot = dir.dot(smooth_dir);
-                angle_penalty = 1.0 + (1.0 - dot);  // favors alignment (dot=1)
-            }
-
-            double weighted_cost = dist * angle_penalty;
-
-            mst_edges.push_back({i, nb, weighted_cost});
+            if (nb <= i) continue; // Avoid bi-directional check
+            Eigen::Vector3d ver_i = GS.global_vertices[i].position;
+            Eigen::Vector3d ver_nb = GS.global_vertices[nb].position;
+            double weight = (ver_i - ver_nb).norm();
+            mst_edges.push_back({i, nb, weight});
         }
     }
 
@@ -328,8 +289,10 @@ void PathPlanner::mst() {
 
     GS.global_adj = std::move(mst_adj);
 
+    // Identify leafs and joints
     graph_decomp();
 }
+
 
 void PathPlanner::vertex_merge() {
     auto is_joint = [&](int idx) {
