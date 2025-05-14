@@ -10,6 +10,10 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <Eigen/Core>
 
+struct SkeletonVertex;
+struct Viewpoint;
+
+
 struct VoxelIndex {
     int x, y, z;
     bool operator==(const VoxelIndex &other) const {
@@ -79,6 +83,8 @@ struct SkeletonVertex {
     bool updated = false;
     int visited_cnt = 0;
     int invalid = false; // If no proper viewpoint can be generated??
+
+    std::vector<Viewpoint> assigned_vpts;
 };
 
 
@@ -87,6 +93,7 @@ struct Viewpoint {
     Eigen::Quaterniond orientation;
     std::set<VoxelIndex> visible_voxels;
     int corresp_vertex_id;
+
     double score = 0.0f;
     bool locked = false;
     bool visited = false;
@@ -189,8 +196,8 @@ private:
     double voxel_size = 1.0;
     double fov_h = 90;
     double fov_v = 60;
-    double max_view_dist = 25;
-    double safe_dist = 8;
+    double max_view_dist = 12;
+    double safe_dist = 4;
     double viewpoint_merge_dist = 3.0;
 
     static constexpr int UNVISITED = -2;
