@@ -172,20 +172,6 @@ void PathPlanner::skeleton_increment() {
             v.just_approved = false;
         }
     }
-    // int global_i = 0;
-    // for (auto &v : GS.prelim_vertices) {
-    //     if (!v.conf_check) continue;
-
-    //     // Add to global structures
-    //     GS.global_vertices.push_back(v);
-    //     GS.global_vertices_cloud->points.emplace_back(v.position.x(), v.position.y(), v.position.z());
-
-    //     // Log new entries
-    //     if (v.just_approved) {
-    //         GS.new_vertex_indices.push_back(global_i);
-    //     }
-    //     ++global_i;
-    // }
 }
 
 void PathPlanner::graph_adj() {
@@ -289,42 +275,6 @@ void PathPlanner::smooth_vertex_positions() {
         v.position.x(), v.position.y(), v.position.z()
       );
     }
-
-    // NOTE: SHOULD NOT MOVE JOINTS!!!
-    // if (GS.global_vertices.empty() || GS.global_adj.empty()) return;
-
-    // std::vector<Eigen::Vector3d> new_positions(GS.global_vertices.size());
-
-    // for (size_t i = 0; i < GS.global_vertices.size(); ++i) {
-    //     const auto& v = GS.global_vertices[i];
-    //     const auto& nbrs = GS.global_adj[i];
-
-    //     if (v.type == 1 || v.type == 3 || nbrs.size() < 2) {
-    //         new_positions[i] = v.position;  // Do not smooth leafs or joints
-    //         continue;
-    //     }
-
-    //     Eigen::Vector3d avg = Eigen::Vector3d::Zero();
-    //     for (int j : nbrs) {
-    //         avg += GS.global_vertices[j].position;
-    //     }
-
-    //     avg /= static_cast<double>(nbrs.size());
-
-    //     double blend = 0.3;
-    //     new_positions[i] = (1.0 - blend) * v.position + blend * avg;
-    // }
-
-    // for (size_t i = 0; i < GS.global_vertices.size(); ++i) {
-    //     GS.global_vertices[i].position = new_positions[i];
-    // }
-
-    // // Update point cloud too
-    // GS.global_vertices_cloud->clear();
-    // for (const auto& v : GS.global_vertices) {
-    //     pcl::PointXYZ pt(v.position(0), v.position(1), v.position(2));
-    //     GS.global_vertices_cloud->points.push_back(pt);
-    // }
 }
 
 void PathPlanner::mst() {
@@ -432,65 +382,6 @@ void PathPlanner::vertex_merge() {
     }
 
     graph_decomp(); // update leafs and joints
-
-
-    // // compact out deleted vertices
-    // std::vector<int> index_map(GS.global_vertices.size(), -1);
-    // int new_index = 0;
-    // for (int old_index = 0; old_index < (int)GS.global_vertices.size(); ++old_index) {
-    //     if (!to_delete.count(old_index)) {
-    //         index_map[old_index] = new_index++;
-    //     }
-    // }
-
-    // // Compact vertex list
-    // std::vector<SkeletonVertex> new_vertices;
-    // std::vector<std::vector<int>> new_adj;
-    // for (int i = 0; i < (int)GS.global_vertices.size(); ++i) {
-    //     int mapped_i = index_map[i];
-    //     if (mapped_i < 0) {
-    //         new_vertices.push_back(GS.global_vertices[i]);
-    //         std::vector<int> new_neighbors;
-    //         for (int nbr : GS.global_adj[i]) {
-    //             int mapped_n = index_map[nbr];
-    //             if (mapped_n >= 0 && mapped_n != mapped_i) {
-    //                 new_neighbors.push_back(index_map[nbr]);
-    //             }
-    //         }
-    //         std::sort(new_neighbors.begin(), new_neighbors.end());
-    //         new_neighbors.erase(std::unique(new_neighbors.begin(), new_neighbors.end()), new_neighbors.end());
-    //         new_adj.push_back(std::move(new_neighbors));
-    //     }
-    // }
-
-    // // Update joints
-    // for (int& idx : GS.joints) {
-    //     idx = index_map[idx];
-    // }
-    // GS.joints.erase(std::remove(GS.joints.begin(), GS.joints.end(), -1), GS.joints.end());
-
-    // GS.global_vertices = std::move(new_vertices);
-    // GS.global_adj = std::move(new_adj);
-
-    // // Update point cloud...
-    // GS.global_vertices_cloud->clear();
-    // for (auto &gver : GS.global_vertices) {
-    //     pcl::PointXYZ pt(gver.position(0), gver.position(1), gver.position(2));
-    //     GS.global_vertices_cloud->points.push_back(pt);
-    // }
-
-    // // Update the list of new vertices this run
-    // std::vector<int> updated_new_indices;
-    // updated_new_indices.reserve(new_set.size());
-    // for (int old_idx : new_set) {
-    //     if (!to_delete.count(old_idx)) {
-    //         int ni = index_map[old_idx];
-    //         if (ni >= 0) {
-    //             updated_new_indices.push_back(ni);
-    //         }
-    //     }
-    // }
-    // GS.new_vertex_indices = std::move(updated_new_indices);
 }
 
 void PathPlanner::prune_branches() {
@@ -547,33 +438,6 @@ void PathPlanner::prune_branches() {
     }
 
     graph_decomp();
-
-    // std::vector<int> old_to_new(N_ver, -1);
-    // std::vector<SkeletonVertex> new_vertices;
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr new_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    // std::vector<std::vector<int>> new_adj;
-
-    // for (int i=0; i<N_ver; ++i) {
-    //     if (!to_keep[i]) continue; 
-    //     old_to_new[i] = (int)new_vertices.size();
-    //     new_vertices.push_back(GS.global_vertices[i]);
-    //     new_cloud->points.push_back(GS.global_vertices_cloud->points[i]);
-    //     new_adj.emplace_back();
-    // }
-
-    // for (int i=0; i<N_ver; ++i) {
-    //     if (!to_keep[i]) continue;
-    //     int ni = old_to_new[i];
-    //     for (int nb : GS.global_adj[i]) {
-    //         if (to_keep[nb]) {
-    //             new_adj[ni].push_back(old_to_new[nb]);
-    //         }
-    //     }
-    // }
-
-    // GS.global_vertices = std::move(new_vertices);
-    // GS.global_adj = std::move(new_adj);
-    // GS.global_vertices_cloud = new_cloud;
 }
 
 void PathPlanner::graph_decomp() {
@@ -602,10 +466,6 @@ void PathPlanner::graph_decomp() {
             // GS.global_vertices[i].type = 3;
             new_type = 3;
         }
-
-        // else { // Invalid
-        //     GS.global_vertices[i].type = 0;
-        // }
 
         GS.global_vertices[i].type = new_type;
 
@@ -650,9 +510,6 @@ void PathPlanner::viewpoint_sampling() {
         for (auto &vp : vpts) {
             GP.global_vpts.push_back(std::move(vp));
         }
-        // for (int i=0; i<(int)vpts.size(); ++i) {
-        //     GP.global_vpts.push_back(vpts[i]);
-        // }
     }
 }
 
@@ -694,30 +551,6 @@ void PathPlanner::viewpoint_filtering() {
 
         ++it; 
     }
-
-
-    // for (int i=0; i<(int)GP.global_vpts.size(); ++i) {
-    //     auto &vp = GP.global_vpts[i];
-
-    //     if (!viewpoint_check(vp, voxel_tree)) {
-    //         GP.global_vpts.erase(GP.global_vpts.begin() + i);
-    //         --i;
-    //         continue;
-    //     }
-
-    //     for (int j=i+1; j<(int)GP.global_vpts.size(); /* no increment */) {
-    //         auto &other = GP.global_vpts[j];
-    //         if (viewpoint_similarity(vp, other)) {
-    //             vp.position = 0.5 * (vp.position + other.position);
-    //             vp.orientation = vp.orientation.slerp(0.5, other.orientation);
-    //             GP.global_vpts.erase(GP.global_vpts.begin() + j);
-    //         }
-    //         else {
-    //             ++j;
-    //         }
-    //     }
-    //     GS.global_vertices[vp.corresp_vertex_id].assigned_vpts.push_back(vp);
-    // }
 }
 
 void PathPlanner::generate_path() {
