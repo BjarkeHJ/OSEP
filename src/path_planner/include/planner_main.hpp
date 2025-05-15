@@ -76,15 +76,18 @@ struct SkeletonVertex {
     Eigen::Matrix3d covariance;
     int obs_count = 0;
     int unconfirmed_check = 0;
+    bool just_approved = false;
     bool conf_check = false;
     bool freeze = false;
     
+    int smooth_iters_left = 3;
+
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     bool updated = false;
     int visited_cnt = 0;
     int invalid = false; // If no proper viewpoint can be generated??
 
-    std::vector<Viewpoint> assigned_vpts;
+    std::vector<Viewpoint*> assigned_vpts;
 };
 
 
@@ -95,7 +98,7 @@ struct Viewpoint {
     int corresp_vertex_id;
 
     double score = 0.0f;
-    bool locked = false;
+    bool in_path = false;
     bool visited = false;
 };
 
@@ -108,6 +111,7 @@ struct GlobalSkeleton {
     std::vector<SkeletonVertex> prelim_vertices;
     std::vector<SkeletonVertex> global_vertices;
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices_cloud; // For visualizing
+    std::vector<int> new_vertex_indices;
 
     std::vector<int> joints;
     std::vector<int> leafs;
@@ -125,8 +129,9 @@ struct GlobalPath {
     std::vector<int> vertex_nbs_id;
     Viewpoint start;
 
-    std::vector<Viewpoint> global_vpts;
-    std::vector<Viewpoint> local_path; // Current local path being published
+    // std::vector<Viewpoint> global_vpts;
+    std::list<Viewpoint> global_vpts;
+    std::vector<Viewpoint*> local_path; // Current local path being published
     std::vector<Viewpoint> adjusted_path;
     std::vector<Viewpoint> traced_path; // Add only when drone reaches the vpt
 };
@@ -141,7 +146,6 @@ public:
         
     /* Occupancy */
     void global_cloud_handler();
-    void mark_viewpoint_visited(const Viewpoint& reached_vp);
 
     /* Data */
     GlobalSkeleton GS;
@@ -166,11 +170,13 @@ private:
     
     void smooth_vertex_positions();
     void graph_decomp();
+    void merge_into(int id_keep, int id_del);
     
     /* Waypoint Generation and PathPlanning*/
     void viewpoint_sampling();
     void viewpoint_filtering();
     void generate_path();
+    void refine_path();
 
 
     std::vector<Viewpoint> generate_viewpoint(int id);
@@ -198,7 +204,8 @@ private:
     double fov_v = 60;
     double max_view_dist = 12;
     double safe_dist = 4;
-    double viewpoint_merge_dist = 3.0;
+    double viewpoint_merge_dist = 2.0;
+    double gnd_th = 20.0;
 
     static constexpr int UNVISITED = -2;
     static constexpr int NOISE     = -1;

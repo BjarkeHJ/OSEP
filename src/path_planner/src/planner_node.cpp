@@ -229,14 +229,14 @@ void PlannerNode::publish_path() {
             geometry_msgs::msg::PoseStamped pose_msg;
             pose_msg.header = path_msg.header;
 
-            pose_msg.pose.position.x = vp.position.x();
-            pose_msg.pose.position.y = vp.position.y();
-            pose_msg.pose.position.z = vp.position.z();
+            pose_msg.pose.position.x = vp->position.x();
+            pose_msg.pose.position.y = vp->position.y();
+            pose_msg.pose.position.z = vp->position.z();
 
-            pose_msg.pose.orientation.x = vp.orientation.x();
-            pose_msg.pose.orientation.y = vp.orientation.y();
-            pose_msg.pose.orientation.z = vp.orientation.z();
-            pose_msg.pose.orientation.w = vp.orientation.w();
+            pose_msg.pose.orientation.x = vp->orientation.x();
+            pose_msg.pose.orientation.y = vp->orientation.y();
+            pose_msg.pose.orientation.z = vp->orientation.z();
+            pose_msg.pose.orientation.w = vp->orientation.w();
 
             path_msg.poses.push_back(pose_msg);
         }
@@ -246,22 +246,22 @@ void PlannerNode::publish_path() {
 
 void PlannerNode::init_path() {
     // Guiding the drone towards the structure
-    Viewpoint first_vp;
-    Viewpoint second_vp;
-    Viewpoint third_vp;
-    Viewpoint fourth_vp;
-    
-    // first_vp.position = Eigen::Vector3d(0.0, 0.0, 50.0);
-    // first_vp.orientation = Eigen::Quaterniond::Identity();
+    // Viewpoint* first_vp;
+    Viewpoint* second_vp = new Viewpoint();
+    Viewpoint* third_vp = new Viewpoint();
+    Viewpoint* fourth_vp = new Viewpoint();
 
-    second_vp.position = Eigen::Vector3d(0.0, 0.0, 120.0);
-    second_vp.orientation = Eigen::Quaterniond::Identity();
+    // first_vp->position = Eigen::Vector3d(0.0, 0.0, 50.0);
+    // first_vp->orientation = Eigen::Quaterniond::Identity();
 
-    third_vp.position = Eigen::Vector3d(100.0, 0.0, 120.0);
-    third_vp.orientation = Eigen::Quaterniond::Identity();
+    second_vp->position = Eigen::Vector3d(0.0, 0.0, 120.0);
+    second_vp->orientation = Eigen::Quaterniond::Identity();
 
-    fourth_vp.position = Eigen::Vector3d(170.0, 0.0, 120.0);
-    fourth_vp.orientation = Eigen::Quaterniond::Identity();
+    third_vp->position = Eigen::Vector3d(100.0, 0.0, 120.0);
+    third_vp->orientation = Eigen::Quaterniond::Identity();
+
+    fourth_vp->position = Eigen::Vector3d(170.0, 0.0, 120.0);
+    fourth_vp->orientation = Eigen::Quaterniond::Identity();
 
     // planner->GP.local_path.push_back(first_vp);
     planner->GP.local_path.push_back(second_vp);
@@ -270,25 +270,6 @@ void PlannerNode::init_path() {
 }
 
 void PlannerNode::drone_tracking() {
-    // if (planner->GP.local_path.empty()) return;
-
-    // const double dist_check_th = 1.5;
-
-    // while (!planner->GP.local_path.empty()) {
-    //     const Viewpoint& current_next = planner->GP.local_path.front();
-    //     double distance_to_drone = (current_next.position - position).norm();
-
-    //     if (distance_to_drone < dist_check_th) {
-    //         RCLCPP_INFO(this->get_logger(), "Arrived at Viewpoint - Removing from path");
-    //         // planner->GP.local_path[0].visited = true;
-    //         planner->mark_viewpoint_visited(planner->GP.local_path[0]);
-    //         planner->GP.traced_path.push_back(planner->GP.local_path[0]); // Assign to traced path
-    //         planner->GP.local_path.erase(planner->GP.local_path.begin()); // Remove the first element
-    //     } else {
-    //         break;
-    //     }
-    // }
-
     if (planner->GP.adjusted_path.empty()) return;
 
     const double dist_check_th = 2.0;
@@ -297,9 +278,15 @@ void PlannerNode::drone_tracking() {
         Viewpoint target = planner->GP.adjusted_path[i];
         double distance_to_drone = (target.position - position).norm();
         if (distance_to_drone < dist_check_th) {
+            // Mark the corresponding viewpoint as visited...
+            Viewpoint *master_vp = planner->GP.local_path[i];
+            master_vp->visited = true;
+
+            // Delete from paths
             planner->GP.traced_path.push_back(planner->GP.adjusted_path[i]);
             planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin(), planner->GP.adjusted_path.begin() + (i+1));
             planner->GP.local_path.erase(planner->GP.local_path.begin(), planner->GP.local_path.begin() + (i+1));
+            
             RCLCPP_INFO(this->get_logger(), "Reached Viewpoint: Deleting %d viewpoints from path", (i+1));
             break;
         }
@@ -339,15 +326,19 @@ void PlannerNode::run() {
             RCLCPP_INFO(this->get_logger(), "Initial Path Set - Following until structure detected!");     
         }
 
+        if (!planner->local_vertices->empty()) {
+            RCLCPP_INFO(this->get_logger(), "Recieved first vertices - Starting Planning!");
+            for (auto vp_ptr : planner->GP.local_path) {
+                delete vp_ptr;
+            }              
+            planner->GP.local_path.clear();
+            planner->GP.adjusted_path.clear();
+            planner_flag = true;
+        }
+        
         drone_tracking();
         publish_path();
         
-        if (!planner->local_vertices->empty()) {
-            RCLCPP_INFO(this->get_logger(), "Recieved first vertices - Starting Planning!");
-            planner->GP.local_path.clear();
-            planner_flag = true;
-        }
-
         return;
     }
 
@@ -366,7 +357,6 @@ void PlannerNode::run() {
         publish_path();
     }
     else run_cnt++;
-
 }
 
 int main(int argc, char** argv) {

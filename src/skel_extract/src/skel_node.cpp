@@ -138,6 +138,8 @@ void SkeletonExtractionNode::run() {
             // Transform the point cloud
             tf2::doTransform(cloud_in, cloud_out, curr_tf);
 
+            // Pass through filter to filter points above gnd_threshold
+
             // Now cloud_out is in the target_frame
             cloud_out.header.frame_id = global_frame_id;
             cloud_pub_->publish(cloud_out);
