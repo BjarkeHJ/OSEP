@@ -30,8 +30,11 @@ public:
     void vertex_callback(const sensor_msgs::msg::PointCloud2::SharedPtr vertex_msg);
     void odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_msg);
 
-    void publish_gskel();
     void publish_viewpoints();
+    void publish_traced_path();
+    void publish_seen_voxels();
+
+    void publish_gskel();
     void publish_path();
     void init_path();
     void drone_tracking();
@@ -50,10 +53,12 @@ public:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr adjusted_vpts_sub_;
-    
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr traced_path_pub_;
+
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr seen_voxels_pub_;
     
     rclcpp::TimerBase::SharedPtr run_timer_;
+    rclcpp::TimerBase::SharedPtr traced_timer_;
 
 private:
     std::string topic_prefix = "/osep";
@@ -66,6 +71,7 @@ private:
     int run_cnt;
 
     int run_timer_ms = 100;
+    int traced_ms = 100;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
     pcl::PointCloud<pcl::PointXYZ>::Ptr vertices;
 
@@ -87,14 +93,16 @@ void PlannerNode::init() {
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_points", 10);
 
     path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
+    traced_path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/traced_viewpoints", 10);
     viewpoint_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>(topic_prefix+"/all_viewpoints", 10);
 
-    seen_voxels_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/seen_voxel", 10); // When a vpt is popped published the seen voxels 
+    seen_voxels_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/seen_voxels", 10); // When a vpt is popped published the seen voxels 
     adjusted_vpts_sub_ = this->create_subscription<nav_msgs::msg::Path>("/planner/viewpoints_adjusted", 10, std::bind(&PlannerNode::adjust_viewpoints, this, std::placeholders::_1)); 
 
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&PlannerNode::run, this));
+    traced_timer_ = this->create_wall_timer(std::chrono::milliseconds(traced_ms), std::bind(&PlannerNode::publish_traced_path, this));
 
     /* Params */
     // Stuff from launch file (ToDo)...
@@ -147,6 +155,44 @@ void PlannerNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_ms
     orientation.x() = odom_msg->pose.pose.orientation.x;
     orientation.y() = odom_msg->pose.pose.orientation.y;
     orientation.z() = odom_msg->pose.pose.orientation.z;
+}
+
+void PlannerNode::publish_traced_path() {
+    if (planner->GP.traced_path.empty()) return;
+
+    const auto& vpts = planner->GP.traced_path;
+    if (!vpts.empty()) {
+        nav_msgs::msg::Path path_msg;
+        path_msg.header.frame_id = global_frame_id;
+        path_msg.header.stamp = now();
+
+        for (const auto& vp : vpts) {
+            geometry_msgs::msg::PoseStamped pose_msg;
+            pose_msg.header = path_msg.header;
+
+            pose_msg.pose.position.x = vp.position.x();
+            pose_msg.pose.position.y = vp.position.y();
+            pose_msg.pose.position.z = vp.position.z();
+
+            pose_msg.pose.orientation.x = vp.orientation.x();
+            pose_msg.pose.orientation.y = vp.orientation.y();
+            pose_msg.pose.orientation.z = vp.orientation.z();
+            pose_msg.pose.orientation.w = vp.orientation.w();
+
+            path_msg.poses.push_back(pose_msg);
+        }
+        traced_path_pub_->publish(path_msg);
+    }
+}
+
+void PlannerNode::publish_seen_voxels() {
+    if (planner->GS.global_seen_cloud->points.empty()) return;
+
+    sensor_msgs::msg::PointCloud2 seen_msg;
+    pcl::toROSMsg(*planner->GS.global_seen_cloud, seen_msg);
+    seen_msg.header.frame_id = global_frame_id;
+    seen_msg.header.stamp = now();
+    seen_voxels_pub_->publish(seen_msg);
 }
 
 void PlannerNode::publish_gskel() {
@@ -260,7 +306,7 @@ void PlannerNode::init_path() {
     third_vp->position = Eigen::Vector3d(100.0, 0.0, 120.0);
     third_vp->orientation = Eigen::Quaterniond::Identity();
 
-    fourth_vp->position = Eigen::Vector3d(170.0, 0.0, 120.0);
+    fourth_vp->position = Eigen::Vector3d(180.0, 0.0, 120.0);
     fourth_vp->orientation = Eigen::Quaterniond::Identity();
 
     // planner->GP.local_path.push_back(first_vp);
@@ -281,7 +327,8 @@ void PlannerNode::drone_tracking() {
             // Mark the corresponding viewpoint as visited...
             Viewpoint *master_vp = planner->GP.local_path[i];
             master_vp->visited = true;
-
+            // Update seen voxels based on viewpoint visisted
+            planner->update_seen_cloud(master_vp);
             // Delete from paths
             planner->GP.traced_path.push_back(planner->GP.adjusted_path[i]);
             planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin(), planner->GP.adjusted_path.begin() + (i+1));
@@ -349,8 +396,9 @@ void PlannerNode::run() {
 
     publish_gskel();
     publish_viewpoints();
+    publish_seen_voxels();
     
-    if (run_cnt >= 20) {
+    if (run_cnt >= 50) {
         planner->pose = {position, orientation};
         planner->plan_path();
         drone_tracking();

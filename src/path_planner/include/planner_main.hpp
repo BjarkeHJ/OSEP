@@ -80,7 +80,7 @@ struct SkeletonVertex {
     bool conf_check = false;
     bool freeze = false;
     
-    int smooth_iters_left = 3;
+    int smooth_iters_left = 5;
 
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     bool updated = false;
@@ -94,7 +94,7 @@ struct SkeletonVertex {
 struct Viewpoint {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
-    std::set<VoxelIndex> visible_voxels;
+    std::vector<VoxelIndex> covered_voxels;
     int corresp_vertex_id;
 
     double score = 0.0f;
@@ -106,8 +106,11 @@ struct GlobalSkeleton {
     std::unordered_set<VoxelIndex, VoxelIndexHash> voxels;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> voxel_point_count;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> seen_voxels;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_seen_cloud;
+    std::unordered_set<VoxelIndex, VoxelIndexHash> global_seen_voxels;
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
+    
     std::vector<SkeletonVertex> prelim_vertices;
     std::vector<SkeletonVertex> global_vertices;
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_vertices_cloud; // For visualizing
@@ -146,6 +149,7 @@ public:
         
     /* Occupancy */
     void global_cloud_handler();
+    void update_seen_cloud(Viewpoint *vp);
 
     /* Data */
     GlobalSkeleton GS;
@@ -183,32 +187,36 @@ private:
     std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, double disp_distance, int vertex_id);
     bool viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ>& voxel_tree);
     bool viewpoint_similarity(const Viewpoint& a, const Viewpoint& b);
-    void score_viewpoint(Viewpoint &vp);    
-    std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
+    void score_viewpoint(Viewpoint *vp);   
+
+    // std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
+
+    void dfs_collect(int node_id, int& slots_left, Eigen::Vector2d& ref_dir_xy, Eigen::Vector3d& last_pos, std::vector<Viewpoint*>& out_vps, std::unordered_set<int>& seen);
+    bool line_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);    
+
 
     /* Data */
     bool planner_flag = false;
     bool first_plan = true;
     int N_new_vers; // store number of new vertices for each iteration...
-    int horizon_max = 5;
+    int MAX_HORIZON = 5;
+    double MAX_JUMP = 5;
 
     /* Params */
-    int max_obs_wo_conf = 3; // Maximum number of iters without passing conf check before discarding...
-    double fuse_dist_th = 2.0;
-    double fuse_conf_th = 0.5;
-    double kf_pn = 0.00001;
+    int max_obs_wo_conf = 3; // Maximum number of runs without passing conf check before discarding...
+    double fuse_dist_th = 2.5;
+    double fuse_conf_th = 0.3;
+    double kf_pn = 0.01;
     double kf_mn = 0.1;
 
     double voxel_size = 1.0;
     double fov_h = 90;
     double fov_v = 60;
-    double max_view_dist = 12;
-    double safe_dist = 4;
+    double min_view_dist = 4;
+    double max_view_dist = 15;
+    double safe_dist = 6;
     double viewpoint_merge_dist = 2.0;
     double gnd_th = 20.0;
-
-    static constexpr int UNVISITED = -2;
-    static constexpr int NOISE     = -1;
 
 };
 
