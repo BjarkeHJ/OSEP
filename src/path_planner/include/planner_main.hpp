@@ -192,7 +192,7 @@ private:
 
     void viewpoint_connections();
     void generate_path_test();
-    std::vector<Viewpoint*> vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2d& ref_dir_xy);
+    void vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2d& ref_dir_xy, std::vector<Viewpoint*>& out_vps);
 
     std::vector<Viewpoint> generate_viewpoint(int id);
     std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, double disp_distance, int vertex_id);
@@ -209,29 +209,31 @@ private:
     /* Data */
     bool planner_flag = false;
     bool first_plan = true;
+    bool first_sample = true;
     bool get_branch_vertex = true;
-    int N_new_vers; // store number of new vertices for each iteration...
-    int MAX_HORIZON = 5;
-    double MAX_JUMP = 5;
 
+    int N_new_vers; // store number of new vertices for each iteration...
+    
     /* Params */
     int max_obs_wo_conf = 3; // Maximum number of runs without passing conf check before discarding...
     double fuse_dist_th = 2.5;
     double fuse_conf_th = 0.3;
     double kf_pn = 0.01;
     double kf_mn = 0.1;
-
+    
     double voxel_size = 0.5;
     double fov_h = 90;
     double fov_v = 60;
-
+    
     double min_view_dist = 4;
     double max_view_dist = 15;
     double safe_dist = 4;
-
-    double viewpoint_merge_dist = 1.0;
+    
+    double viewpoint_merge_dist = 2.0;
     double gnd_th = 20.0;
-
+    
+    int MAX_HORIZON = 5;
+    double MAX_JUMP = 5;
 };
 
 

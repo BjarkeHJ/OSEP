@@ -327,6 +327,7 @@ void PlannerNode::drone_tracking() {
             // Mark the corresponding viewpoint as visited...
             Viewpoint *master_vp = planner->GP.local_path[i];
             master_vp->visited = true;
+            master_vp->in_path = false;
             // Update seen voxels based on viewpoint visisted
             planner->update_seen_cloud(master_vp);
             // Delete from paths
@@ -397,14 +398,20 @@ void PlannerNode::run() {
     publish_gskel();
     publish_viewpoints();
     publish_seen_voxels();
-    
-    if (run_cnt >= 50) {
-        planner->pose = {position, orientation};
-        planner->plan_path();
-        drone_tracking();
-        publish_path();
-    }
-    else run_cnt++;
+
+    planner->pose = {position, orientation};
+    planner->plan_path();
+    drone_tracking();
+    publish_path();
+
+
+    // if (run_cnt >= 20) {
+    //     planner->pose = {position, orientation};
+    //     planner->plan_path();
+    //     drone_tracking();
+    //     publish_path();
+    // }
+    // else run_cnt++;
 }
 
 int main(int argc, char** argv) {
