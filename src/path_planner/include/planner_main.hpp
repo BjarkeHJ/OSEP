@@ -191,6 +191,9 @@ private:
     void refine_path();
 
     void viewpoint_connections();
+
+    void build_visibility_graph();
+
     void generate_path_test();
     void vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2d& ref_dir_xy, std::vector<Viewpoint*>& out_vps);
 

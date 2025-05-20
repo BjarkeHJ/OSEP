@@ -76,7 +76,9 @@ void PathPlanner::plan_path() {
 
     viewpoint_sampling();
     viewpoint_filtering();
-    viewpoint_connections();
+    // viewpoint_connections();
+    build_visibility_graph();
+
 
     int path_length = (int)GP.local_path.size();
     if (path_length < MAX_HORIZON) {
@@ -802,7 +804,7 @@ void PathPlanner::refine_path() {
 
 void PathPlanner::viewpoint_connections() {
     for (int vid=0; vid<(int)GS.global_vertices.size(); ++vid) {
-        if (!GS.global_vertices[vid].updated) continue;
+        // if (!GS.global_vertices[vid].updated) continue;
 
         auto& vertex = GS.global_vertices[vid];
         auto& vpts = vertex.assigned_vpts;
@@ -865,12 +867,15 @@ void PathPlanner::viewpoint_connections() {
 
                 // branch-branch
                 if (nb_vertex.type == 2) {
+                    // const double cos120 = std::cos(2.0 * M_PI / 3.0);
+                    const double cos90 = std::cos(M_PI / 2.0);
+
                     for (Viewpoint* vp_a : vpts) {
                         for (Viewpoint* vp_b : nb_vpts) {
                             Eigen::Vector3d dir_a = vp_a->orientation*Eigen::Vector3d::UnitX();
                             Eigen::Vector3d dir_b = vp_b->orientation*Eigen::Vector3d::UnitX();
                             double dot = dir_a.normalized().dot(dir_b.normalized());
-                            if (dot > 0.0) {
+                            if (dot > cos90) {
                                 vp_a->adj.push_back(vp_b);
                                 vp_b->adj.push_back(vp_a);
                             }
@@ -878,27 +883,60 @@ void PathPlanner::viewpoint_connections() {
                     }
                 }
 
-                // branch-leaf
+                // branch-leaf        
+                
                 else if (nb_vertex.type == 1 && !vpts.empty() && !nb_vpts.empty()) {
-                    double best_dist = std::numeric_limits<double>::max();
-                    int best_a = -1;
-                    int best_b = -1;
-
-                    for (int i=0; i<(int)vpts.size(); ++i) {
-                        for (int j=0; j<(int)nb_vpts.size(); ++j) {
-                            double dist = (vpts[i]->position - nb_vpts[j]->position).squaredNorm();
-                            if (dist < best_dist) {
-                                best_dist = dist;
-                                best_a = i;
-                                best_b = j;
+                    int B = (int)vpts.size();      // e.g. 2 branch VPs
+                    int L = (int)nb_vpts.size();   // e.g. 5 leaf VPs
+                
+                    // keep track of which leaves are already “taken”
+                    std::vector<bool> leaf_used(L, false);
+                
+                    for (int i = 0; i < B; ++i) {
+                        double best_d2 = std::numeric_limits<double>::max();
+                        int    best_j = -1;
+                
+                        // find the closest leaf that isn’t used yet
+                        for (int j = 0; j < L; ++j) {
+                            if (leaf_used[j]) continue;
+                            double d2 = (vpts[i]->position - nb_vpts[j]->position).squaredNorm();
+                            if (d2 < best_d2) {
+                                best_d2 = d2;
+                                best_j = j;
                             }
                         }
-                    }
-                    if (best_a >= 0 && best_b >= 0) {
-                        vpts[best_a]->adj.push_back(vpts[best_b]);
-                        nb_vpts[best_b]->adj.push_back(vpts[best_a]);
+                
+                        // if we found one, connect them and mark that leaf as used
+                        if (best_j >= 0) {
+                            leaf_used[best_j] = true;
+                            Viewpoint* A = vpts[i];
+                            Viewpoint* Bleaf = nb_vpts[best_j];
+                            A->adj.push_back(Bleaf);
+                            Bleaf->adj.push_back(A);
+                        }
                     }
                 }
+
+                // else if (nb_vertex.type == 1 && !vpts.empty() && !nb_vpts.empty()) {
+                //     double best_dist = std::numeric_limits<double>::max();
+                //     int best_a = -1;
+                //     int best_b = -1;
+
+                //     for (int i=0; i<(int)vpts.size(); ++i) {
+                //         for (int j=0; j<(int)nb_vpts.size(); ++j) {
+                //             double dist = (vpts[i]->position - nb_vpts[j]->position).squaredNorm();
+                //             if (dist < best_dist) {
+                //                 best_dist = dist;
+                //                 best_a = i;
+                //                 best_b = j;
+                //             }
+                //         }
+                //     }
+                //     if (best_a >= 0 && best_b >= 0) {
+                //         vpts[best_a]->adj.push_back(nb_vpts[best_b]);
+                //         nb_vpts[best_b]->adj.push_back(vpts[best_a]);
+                //     }
+                // }
 
                 // branch-joint
                 else if (nb_vertex.type == 3 && !vpts.empty() && !nb_vpts.empty()) {
@@ -957,6 +995,104 @@ void PathPlanner::viewpoint_connections() {
     }
 }
 
+
+
+void PathPlanner::build_visibility_graph() {
+    const double max_r2 = 10.0 * 10.0;
+    const int K       = 5;
+
+    // 1) Collect pointers and build index map
+    std::vector<Viewpoint*> all_vpts;
+    all_vpts.reserve(GP.global_vpts.size());
+    for (auto& vp : GP.global_vpts) {
+        all_vpts.push_back(&vp);
+    }
+    const int N = (int)all_vpts.size();
+    if (N == 0) return;
+
+    std::unordered_map<Viewpoint*, int> idx;
+    idx.reserve(N);
+    for (int i = 0; i < N; ++i) idx[all_vpts[i]] = i;
+
+    // 2) Clear old edges
+    for (auto* vp : all_vpts) {
+        vp->adj.clear();
+    }
+
+    // 3) K-NN + visibility
+    for (int i = 0; i < N; ++i) {
+        auto* A = all_vpts[i];
+        std::vector<std::pair<double,int>> dists;
+        dists.reserve(N-1);
+
+        for (int j = 0; j < N; ++j) {
+            if (i == j) continue;
+            auto* B = all_vpts[j];
+            double d2 = (A->position - B->position).squaredNorm();
+            if (d2 > max_r2) continue;
+            dists.emplace_back(d2, j);
+        }
+        std::sort(dists.begin(), dists.end(),
+                  [](auto &a, auto &b){ return a.first < b.first; });
+
+        int taken = 0;
+        for (auto& [d2, j] : dists) {
+            if (taken >= K) break;
+            auto* B = all_vpts[j];
+            if (line_obstructed(A->position, B->position)) continue;
+            A->adj.push_back(B);
+            B->adj.push_back(A);
+            ++taken;
+        }
+    }
+
+    // 4) Build edge list for MST
+    struct Edge { int u, v; double w; };
+    std::vector<Edge> edges;
+    edges.reserve(N * K / 2);
+    for (int i = 0; i < N; ++i) {
+        for (auto* B : all_vpts[i]->adj) {
+            int j = idx[B];
+            if (i < j) {
+                double w = (all_vpts[i]->position - all_vpts[j]->position).norm();
+                edges.push_back({i, j, w});
+            }
+        }
+    }
+
+    // 5) Sort edges by weight
+    std::sort(edges.begin(), edges.end(),
+              [](const Edge &a, const Edge &b){ return a.w < b.w; });
+
+    // 6) Kruskal DSU
+    struct DSU {
+        std::vector<int> p;
+        DSU(int n): p(n) { std::iota(p.begin(), p.end(), 0); }
+        int find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }
+        bool unite(int a, int b) {
+            a = find(a); b = find(b);
+            if (a == b) return false;
+            p[b] = a; return true;
+        }
+    } dsu(N);
+
+    // 7) Clear adjacency and build MST graph
+    for (auto* vp : all_vpts) vp->adj.clear();
+
+    int count = 0;
+    for (const auto& e : edges) {
+        if (dsu.unite(e.u, e.v)) {
+            auto* A = all_vpts[e.u];
+            auto* B = all_vpts[e.v];
+            A->adj.push_back(B);
+            B->adj.push_back(A);
+            if (++count == N - 1) break;
+        }
+    }
+}
+
+
+
 void PathPlanner::generate_path_test() {
     if (GP.global_vpts.empty()) return;
 
@@ -1014,32 +1150,32 @@ void PathPlanner::vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2
     Eigen::Vector3d prev_pos = start->position;
 
     for (int i=0; i<steps && current; ++i) {
-        out_vps.push_back(current);
-        current->in_path = true;
         visited.insert(current);
-
+        
         Viewpoint* next = nullptr;
-
+        
         double best_score = -std::numeric_limits<double>::max();
         for (Viewpoint* nb : current->adj) {
             if (nb->visited || nb->in_path) continue;
             if (visited.count(nb)) continue;
-
+            
             Eigen::Vector2d dir = (nb->position - prev_pos).head<2>().normalized();
             double score = ref_dir_xy.dot(dir);
-
+            
             if (score > best_score) {
                 best_score = score;
                 next = nb;
             }
         }
-
+        
         current = next;
+        
         if (current) {
+            out_vps.push_back(current);
+            current->in_path = true;
             prev_pos = current->position;
         }
     }
-
 }
 
 

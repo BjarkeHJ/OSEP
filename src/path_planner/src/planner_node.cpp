@@ -52,6 +52,8 @@ public:
 
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr viewpoint_connection_pub_;
+
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr adjusted_vpts_sub_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr traced_path_pub_;
 
@@ -95,6 +97,7 @@ void PlannerNode::init() {
     path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
     traced_path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/traced_viewpoints", 10);
     viewpoint_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>(topic_prefix+"/all_viewpoints", 10);
+    viewpoint_connection_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(topic_prefix+"/viewpoint_connections", 10);
 
     seen_voxels_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/seen_voxels", 10); // When a vpt is popped published the seen voxels 
     adjusted_vpts_sub_ = this->create_subscription<nav_msgs::msg::Path>("/planner/viewpoints_adjusted", 10, std::bind(&PlannerNode::adjust_viewpoints, this, std::placeholders::_1)); 
@@ -262,6 +265,43 @@ void PlannerNode::publish_viewpoints() {
         }
         viewpoint_pub_->publish(gvps_msg);    
     }
+
+    // Publish inter-viewpoint adjacency
+    const auto& vpts = planner->GP.global_vpts;
+    visualization_msgs::msg::Marker conns;
+    conns.header.frame_id = global_frame_id;
+    conns.header.stamp = this->get_clock()->now();
+    conns.type  = visualization_msgs::msg::Marker::LINE_LIST;
+    conns.action= visualization_msgs::msg::Marker::ADD;
+
+    conns.pose.orientation.w = 1.0;
+    conns.scale.x = 0.05;
+    conns.color.r = 0.6;
+    conns.color.g = 0.2;
+    conns.color.b = 0.2;
+    conns.color.a = 1.0;
+    
+    geometry_msgs::msg::Point p1, p2;
+    // for each edge, push two points (start, end)
+    for (const auto& vp : vpts) {
+      // vp.adj is std::vector<Viewpoint*>
+      for (auto* nbr : vp.adj) {
+        // avoid drawing each undirected edge twice
+        if (&vp < nbr) {
+          geometry_msgs::msg::Point p1, p2;
+          p1.x = vp.position.x();
+          p1.y = vp.position.y();
+          p1.z = vp.position.z();
+          p2.x = nbr->position.x();
+          p2.y = nbr->position.y();
+          p2.z = nbr->position.z();
+          conns.points.push_back(p1);
+          conns.points.push_back(p2);
+        }
+      }
+    }
+
+    viewpoint_connection_pub_->publish(conns);
 }
 
 void PlannerNode::publish_path() {
@@ -399,19 +439,18 @@ void PlannerNode::run() {
     publish_viewpoints();
     publish_seen_voxels();
 
-    planner->pose = {position, orientation};
-    planner->plan_path();
-    drone_tracking();
-    publish_path();
+    // planner->pose = {position, orientation};
+    // planner->plan_path();
+    // drone_tracking();
+    // publish_path();
 
-
-    // if (run_cnt >= 20) {
-    //     planner->pose = {position, orientation};
-    //     planner->plan_path();
-    //     drone_tracking();
-    //     publish_path();
-    // }
-    // else run_cnt++;
+    if (run_cnt >= 20) {
+        planner->pose = {position, orientation};
+        planner->plan_path();
+        drone_tracking();
+        publish_path();
+    }
+    else run_cnt++;
 }
 
 int main(int argc, char** argv) {
