@@ -38,7 +38,9 @@ public:
     void publish_path();
     void init_path();
     void drone_tracking();
-    void adjust_viewpoints(const nav_msgs::msg::Path::SharedPtr adjusted_vpts);
+    void adjusted_viewpoints_callback(const nav_msgs::msg::Path::SharedPtr adjusted_vpts);
+
+    void apply_viewpoint_adjustments();
 
     void run();
 
@@ -70,6 +72,10 @@ private:
     bool update_skeleton_flag = false;
     bool planner_flag = false;
     bool path_init = false;
+    bool vpts_adjusted = false;
+
+    bool waiting_for_adjusted = false; 
+
     int run_cnt;
 
     int run_timer_ms = 100;
@@ -100,7 +106,7 @@ void PlannerNode::init() {
     viewpoint_connection_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(topic_prefix+"/viewpoint_connections", 10);
 
     seen_voxels_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/seen_voxels", 10); // When a vpt is popped published the seen voxels 
-    adjusted_vpts_sub_ = this->create_subscription<nav_msgs::msg::Path>("/planner/viewpoints_adjusted", 10, std::bind(&PlannerNode::adjust_viewpoints, this, std::placeholders::_1)); 
+    adjusted_vpts_sub_ = this->create_subscription<nav_msgs::msg::Path>("/planner/viewpoints_adjusted", 10, std::bind(&PlannerNode::adjusted_viewpoints_callback, this, std::placeholders::_1)); 
 
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/isaac/odom", 10, std::bind(&PlannerNode::odom_callback, this, std::placeholders::_1));
 
@@ -362,16 +368,22 @@ void PlannerNode::drone_tracking() {
 
     for (int i=0; i<(int)planner->GP.adjusted_path.size(); ++i) {
         Viewpoint target = planner->GP.adjusted_path[i];
+        // Viewpoint* target = planner->GP.local_path[i];
         double distance_to_drone = (target.position - position).norm();
+        // double distance_to_drone = (target->position - position).norm();
         if (distance_to_drone < dist_check_th) {
             // Mark the corresponding viewpoint as visited...
             Viewpoint *master_vp = planner->GP.local_path[i];
             master_vp->visited = true;
             master_vp->in_path = false;
+            // target->visited = true;
+            // target->in_path = false;
             // Update seen voxels based on viewpoint visisted
             planner->update_seen_cloud(master_vp);
+            // planner->update_seen_cloud(target);
             // Delete from paths
             planner->GP.traced_path.push_back(planner->GP.adjusted_path[i]);
+            // planner->GP.traced_path.push_back(*planner->GP.local_path[i]);
             planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin(), planner->GP.adjusted_path.begin() + (i+1));
             planner->GP.local_path.erase(planner->GP.local_path.begin(), planner->GP.local_path.begin() + (i+1));
             
@@ -381,13 +393,17 @@ void PlannerNode::drone_tracking() {
     }
 }
 
-void PlannerNode::adjust_viewpoints(const nav_msgs::msg::Path::SharedPtr adjusted_vpts) {
+void PlannerNode::adjusted_viewpoints_callback(const nav_msgs::msg::Path::SharedPtr adjusted_vpts) {
     if (adjusted_vpts->poses.empty()) return;
 
     planner->GP.adjusted_path.clear();
     planner->GP.adjusted_path.reserve(adjusted_vpts->poses.size());
+
     for (const auto& ps : adjusted_vpts->poses) {
         Viewpoint vp;
+
+        if (ps.header.frame_id.empty()) vp.invalid = true;
+
         vp.position = Eigen::Vector3d(
                     ps.pose.position.x,
                     ps.pose.position.y,
@@ -402,6 +418,39 @@ void PlannerNode::adjust_viewpoints(const nav_msgs::msg::Path::SharedPtr adjuste
 
         planner->GP.adjusted_path.push_back(vp);
     }
+    vpts_adjusted = true;
+}
+
+void PlannerNode::apply_viewpoint_adjustments() {
+    if (!vpts_adjusted) return;
+    auto &gp = planner->GP;
+    auto &adjusted = gp.adjusted_path;
+    auto &local    = gp.local_path;
+    auto &gvp      = gp.global_vpts;
+    
+    // 1) must be same size
+    assert(adjusted.size() == local.size());
+    
+    // 2) walk backwards so indices don’t shift
+    for (int i = (int)local.size() - 1; i >= 0; --i) {
+        if (adjusted[i].invalid) {
+        // erase from global list
+        Viewpoint* dead = local[i];
+        for (auto it = gvp.begin(); it != gvp.end(); ++it) {
+            if (&*it == dead) { gvp.erase(it); break; }
+        }
+        // erase from local_path
+        local.erase(local.begin() + i);
+        }
+        else {
+        // copy over updated data
+        local[i]->position    = adjusted[i].position;
+        local[i]->orientation = adjusted[i].orientation;
+        }
+  }
+
+  // 3) cleanup
+  vpts_adjusted = false;
 }
 
 void PlannerNode::run() {
@@ -439,18 +488,27 @@ void PlannerNode::run() {
     publish_viewpoints();
     publish_seen_voxels();
 
-    // planner->pose = {position, orientation};
-    // planner->plan_path();
-    // drone_tracking();
-    // publish_path();
+    // if (run_cnt >= 20) {
 
-    if (run_cnt >= 20) {
+    if (planner->GS.global_vertices.empty()) return;
+
+    if (!waiting_for_adjusted) {
         planner->pose = {position, orientation};
         planner->plan_path();
         drone_tracking();
         publish_path();
+        if (!planner->GP.local_path.empty()) {
+            waiting_for_adjusted = true;
+        }
     }
-    else run_cnt++;
+    else if (vpts_adjusted) {
+        apply_viewpoint_adjustments();
+        drone_tracking();
+        vpts_adjusted = false;
+        waiting_for_adjusted = false;
+    }
+    // }
+    // else run_cnt++;
 }
 
 int main(int argc, char** argv) {

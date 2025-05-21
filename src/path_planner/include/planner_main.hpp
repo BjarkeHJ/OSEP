@@ -80,10 +80,11 @@ struct SkeletonVertex {
     bool conf_check = false;
     bool freeze = false;
     
-    int smooth_iters_left = 5;
+    int smooth_iters_left = 3;
 
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
     bool updated = false;
+    bool spawned_vpts = false;
     int visited_cnt = 0;
     int invalid = false; // If no proper viewpoint can be generated??
 
@@ -102,6 +103,7 @@ struct Viewpoint {
     double score = 0.0f;
     bool in_path = false;
     bool visited = false;
+    bool invalid = false;
 };
 
 struct GlobalSkeleton {
@@ -198,7 +200,7 @@ private:
     void vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2d& ref_dir_xy, std::vector<Viewpoint*>& out_vps);
 
     std::vector<Viewpoint> generate_viewpoint(int id);
-    std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, double disp_distance, int vertex_id);
+    std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, std::vector<double> dists, int vertex_id);
     bool viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ>& voxel_tree);
     bool viewpoint_similarity(const Viewpoint& a, const Viewpoint& b);
     void score_viewpoint(Viewpoint *vp);   
@@ -206,10 +208,13 @@ private:
     // std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
 
     void dfs_collect(int node_id, int& slots_left, Eigen::Vector2d& ref_dir_xy, Eigen::Vector3d& last_pos, std::vector<Viewpoint*>& out_vps, std::unordered_set<int>& seen);
-    bool line_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);    
-
+    bool line_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
+    bool corridor_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
+    double distance_to_free_space(const Eigen::Vector3d &p, Eigen::Vector3d& dir);
 
     /* Data */
+    pcl::KdTreeFLANN<pcl::PointXYZ> global_pts_kdtree;
+
     bool planner_flag = false;
     bool first_plan = true;
     bool first_sample = true;
@@ -224,15 +229,16 @@ private:
     double kf_pn = 0.01;
     double kf_mn = 0.1;
     
-    double voxel_size = 0.5;
+    double voxel_size = 1.0;
     double fov_h = 90;
     double fov_v = 60;
     
+    double disp_dist = 10;
     double min_view_dist = 4;
     double max_view_dist = 15;
-    double safe_dist = 4;
+    double safe_dist = 6;
     
-    double viewpoint_merge_dist = 2.0;
+    double viewpoint_merge_dist = 3.0;
     double gnd_th = 20.0;
     
     int MAX_HORIZON = 5;
