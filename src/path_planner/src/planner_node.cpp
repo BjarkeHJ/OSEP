@@ -30,6 +30,7 @@ public:
     void vertex_callback(const sensor_msgs::msg::PointCloud2::SharedPtr vertex_msg);
     void odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_msg);
 
+    void publish_branches();
     void publish_viewpoints();
     void publish_traced_path();
     void publish_seen_voxels();
@@ -52,6 +53,7 @@ public:
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr branch_pub_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr viewpoint_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr viewpoint_connection_pub_;
@@ -99,6 +101,8 @@ void PlannerNode::init() {
     gskel_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_skeleton", 10);
     adj_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(topic_prefix+"/adjacency_graph", 10);
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/global_points", 10);
+
+    branch_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_prefix+"/branches", 10);
 
     path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/viewpoints", 10);
     traced_path_pub_ = this->create_publisher<nav_msgs::msg::Path>(topic_prefix+"/traced_viewpoints", 10);
@@ -164,6 +168,55 @@ void PlannerNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr odom_ms
     orientation.x() = odom_msg->pose.pose.orientation.x;
     orientation.y() = odom_msg->pose.pose.orientation.y;
     orientation.z() = odom_msg->pose.pose.orientation.z;
+}
+
+void PlannerNode::publish_branches() {
+    if (planner->GS.global_vertices_cloud->points.empty() || planner->GS.branches.empty()) return;
+    // Build an RGB cloud
+    pcl::PointCloud<pcl::PointXYZRGB> cloud_rgb;
+    cloud_rgb.header.frame_id = global_frame_id;     // your fixed frame
+    cloud_rgb.height = 1;
+
+    const size_t N = planner->GS.global_vertices_cloud->size();
+    for (size_t bi = 0; bi < N; ++bi) {
+        // compute a unique hue for this branch
+        float h = float(bi) / float(N);
+        // --- HSV → RGB (v=1, s=1) ---
+        int   hi = int(h * 6) % 6;
+        float f  = h * 6 - int(h * 6);
+        float p  = 0.0f;
+        float q  = 1.0f - f;
+        float t  = f;
+        uint8_t r, g, b;
+        switch (hi) {
+        case 0: r = 255; g = uint8_t(t * 255); b =   0; break;
+        case 1: r = uint8_t(q * 255); g = 255; b =   0; break;
+        case 2: r =   0; g = 255; b = uint8_t(t * 255); break;
+        case 3: r =   0; g = uint8_t(q * 255); b = 255; break;
+        case 4: r = uint8_t(t * 255); g =   0; b = 255; break;
+        case 5: r = 255; g =   0; b = uint8_t(q * 255); break;
+        }
+        // -----------------------------
+
+        for (int idx : planner->GS.branches[bi]) {
+        if (idx < 0 || idx >= (int)planner->GS.global_vertices_cloud->points.size()) {
+            RCLCPP_WARN(get_logger(),
+            "Branch %zu has invalid index %d", bi, idx);
+            continue;
+        }
+        const auto &pt = planner->GS.global_vertices_cloud->points[idx];
+        pcl::PointXYZRGB p;
+        p.x = pt.x; p.y = pt.y; p.z = pt.z;
+        p.r = r;   p.g = g;   p.b = b;
+        cloud_rgb.push_back(p);
+        }
+    }
+
+    // Convert to ROS message and publish
+    sensor_msgs::msg::PointCloud2 out;
+    pcl::toROSMsg(cloud_rgb, out);
+    out.header.stamp = now();
+    branch_pub_->publish(out);
 }
 
 void PlannerNode::publish_traced_path() {
@@ -482,14 +535,15 @@ void PlannerNode::run() {
     if (update_skeleton_flag) {
         planner->update_skeleton();
         update_skeleton_flag = false;
+        // publish_branches();
     }
 
     publish_gskel();
     publish_viewpoints();
     publish_seen_voxels();
-
+    
     // if (run_cnt >= 20) {
-
+        
     if (planner->GS.global_vertices.empty()) return;
 
     if (!waiting_for_adjusted) {

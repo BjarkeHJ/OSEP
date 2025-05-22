@@ -66,6 +66,24 @@ struct UnionFind {
     }
 };
 
+struct MCTSNode {
+    Viewpoint* vp;
+    MCTSNode* parent;
+    std::vector<MCTSNode*> children;
+    int visits = 0;
+    double value = 0.0;
+    
+    std::set<Viewpoint*> visited;
+
+    MCTSNode(Viewpoint* vp, MCTSNode* parent=nullptr)
+        : vp(vp), parent(parent) {
+            if (parent && parent->visited.size()) {
+                visited = parent->visited;
+            }
+            visited.insert(vp);
+        }
+};
+
 struct DronePose {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
@@ -140,6 +158,9 @@ struct GlobalPath {
 
     // std::vector<Viewpoint> global_vpts;
     std::list<Viewpoint> global_vpts;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_vpts_cloud;
+    pcl::KdTreeFLANN<pcl::PointXYZ> global_vpts_tree;
+
     std::vector<int> vpt_connections; 
     std::vector<Viewpoint*> local_path; // Current local path being published
     std::vector<Viewpoint> adjusted_path;
@@ -212,6 +233,11 @@ private:
     bool corridor_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
     double distance_to_free_space(const Eigen::Vector3d &p, Eigen::Vector3d& dir);
 
+    double rollout(Viewpoint* start, std::set<Viewpoint*>& visited, const Eigen::Vector3d& prev_pos);
+    double linearity_score(const Eigen::Vector3d& prev, const Eigen::Vector3d& curr, const Eigen::Vector3d& next);
+    std::vector<Viewpoint*> mcts_run(Viewpoint* start_vp, Viewpoint* prev_vp);
+
+
     /* Data */
     pcl::KdTreeFLANN<pcl::PointXYZ> global_pts_kdtree;
 
@@ -243,6 +269,10 @@ private:
     
     int MAX_HORIZON = 5;
     double MAX_JUMP = 5;
+
+    const int MCTS_ITER = 50;
+    const int ROLLOUT_DEPTH = 20;
+    const double LINEARITY_WEIGHT = 1.5;
 };
 
 
