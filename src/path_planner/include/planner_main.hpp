@@ -9,6 +9,7 @@
 #include <pcl/common/common.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <Eigen/Core>
+#include <random>
 
 struct SkeletonVertex;
 struct Viewpoint;
@@ -101,6 +102,8 @@ struct SkeletonVertex {
     int smooth_iters_left = 3;
 
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
+    int prev_type = -1;
+
     bool updated = false;
     bool spawned_vpts = false;
     int visited_cnt = 0;
@@ -128,6 +131,7 @@ struct GlobalSkeleton {
     std::unordered_set<VoxelIndex, VoxelIndexHash> voxels;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> voxel_point_count;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> seen_voxels;
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_seen_cloud;
     std::unordered_set<VoxelIndex, VoxelIndexHash> global_seen_voxels;
 
@@ -213,11 +217,8 @@ private:
     void generate_path();
     void refine_path();
 
-    void viewpoint_connections();
-
     void build_visibility_graph();
 
-    void generate_path_test();
     void vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2d& ref_dir_xy, std::vector<Viewpoint*>& out_vps);
 
     std::vector<Viewpoint> generate_viewpoint(int id);
@@ -228,15 +229,16 @@ private:
 
     // std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
 
-    void dfs_collect(int node_id, int& slots_left, Eigen::Vector2d& ref_dir_xy, Eigen::Vector3d& last_pos, std::vector<Viewpoint*>& out_vps, std::unordered_set<int>& seen);
-    bool line_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
     bool corridor_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
     double distance_to_free_space(const Eigen::Vector3d &p, Eigen::Vector3d& dir);
 
-    double rollout(Viewpoint* start, std::set<Viewpoint*>& visited, const Eigen::Vector3d& prev_pos);
-    double linearity_score(const Eigen::Vector3d& prev, const Eigen::Vector3d& curr, const Eigen::Vector3d& next);
-    std::vector<Viewpoint*> mcts_run(Viewpoint* start_vp, Viewpoint* prev_vp);
+    std::vector<Viewpoint*> mcts_run(Viewpoint* start_vp);
+    double rollout(Viewpoint* start, std::set<Viewpoint*>& visited);
+    void delete_tree(MCTSNode* node);
+    int find_branch_index(int id);
 
+    std::vector<Viewpoint*> dfs_run(Viewpoint* start_vp, int max_depth);
+    double dfs_reward(Viewpoint* node, Viewpoint* nb);
 
     /* Data */
     pcl::KdTreeFLANN<pcl::PointXYZ> global_pts_kdtree;
@@ -250,29 +252,47 @@ private:
     
     /* Params */
     int max_obs_wo_conf = 3; // Maximum number of runs without passing conf check before discarding...
-    double fuse_dist_th = 2.5;
-    double fuse_conf_th = 0.3;
-    double kf_pn = 0.01;
-    double kf_mn = 0.1;
+    double fuse_dist_th = 3.0;
+    double fuse_conf_th = 0.1;
+    double kf_pn = 0.5;
+    double kf_mn = 0.0001;
     
-    double voxel_size = 1.0;
+    double voxel_size = 1.5;
     double fov_h = 90;
     double fov_v = 60;
     
-    double disp_dist = 10;
+    double disp_dist = 12;
     double min_view_dist = 4;
-    double max_view_dist = 15;
+    double max_view_dist = 20;
     double safe_dist = 6;
+    double corridor_radius = 2;
     
     double viewpoint_merge_dist = 3.0;
-    double gnd_th = 20.0;
+    double visibility_graph_radius = 20.0;
+    double mean_edge_dist = 1.0;
+    double gnd_th = 50.0;
     
-    int MAX_HORIZON = 5;
-    double MAX_JUMP = 5;
+    const int MAX_HORIZON = 3;
+    const int MCTS_ITER = 100;
+    const int ROLLOUT_DEPTH = 7;
+    const double UCB_CONSTANT = 5.0; // orig 1.41
 
-    const int MCTS_ITER = 50;
-    const int ROLLOUT_DEPTH = 20;
-    const double LINEARITY_WEIGHT = 1.5;
+    // const int DFS_MAX_DEPTH = 5;
+    // const int DFS_MAX_DEPTH = 7;
+    const int DFS_MAX_DEPTH = 10;
+
+    const double LEAF_W = 2.0;
+    const double COVERAGE_W = 5.0;
+    const double DIST_W = 0.3;
+    const double REVISIT_W = 3.0;
+    const double BRANCH_W = 1.5;
+
+    // const int MCTS_ITER = 30;
+    // const int ROLLOUT_DEPTH = 3;
+    // const double UCB_CONSTANT = 1.41;
+    // const double LEAF_REWARD = 25.0;
+    // const double COVERAGE_REWARD = 10.0;
+    // const double REVISIT_PENALTY = 200.0;
 };
 
 

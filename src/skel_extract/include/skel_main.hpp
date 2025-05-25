@@ -87,16 +87,16 @@ private:
     rclcpp::Node::SharedPtr node_;
 
     /* Params */
-    double pts_dist_lim = 35;
+    double pts_dist_lim = 30;
     int ne_KNN = 20; //Normal Estimation neighbors
     int k_KNN = 10; //Surface neighbors 
     double leaf_size_ds;
-    int max_points = 300; //Goal for downsampling
-    int drosa_iter = 7; //Number of drosa iterations
-    int dcrosa_iter = 5;
+    int max_points = 1000; //Goal for downsampling
+    int drosa_iter = 3; //Number of drosa iterations
+    int dcrosa_iter = 2;
     double max_projection_range = 10.0; //Maximum projection range during ROSA position [m]
     double alpha = 0.3; //Recenter fuse coefficient
-    double gnd_th = 20; // Threshold for ground vertices removal (assumption of starting in the sky...)
+    double gnd_th = 50; // Threshold for ground vertices removal (assumption of starting in the sky...)
 
     /* Data */
     int pcd_size_;

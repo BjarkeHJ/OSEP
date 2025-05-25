@@ -177,14 +177,13 @@ void PlannerNode::publish_branches() {
     cloud_rgb.header.frame_id = global_frame_id;     // your fixed frame
     cloud_rgb.height = 1;
 
-    const size_t N = planner->GS.global_vertices_cloud->size();
+    const size_t N = planner->GS.branches.size();
     for (size_t bi = 0; bi < N; ++bi) {
         // compute a unique hue for this branch
         float h = float(bi) / float(N);
         // --- HSV → RGB (v=1, s=1) ---
         int   hi = int(h * 6) % 6;
         float f  = h * 6 - int(h * 6);
-        float p  = 0.0f;
         float q  = 1.0f - f;
         float t  = f;
         uint8_t r, g, b;
@@ -426,7 +425,7 @@ void PlannerNode::drone_tracking() {
         // double distance_to_drone = (target->position - position).norm();
         if (distance_to_drone < dist_check_th) {
             // Mark the corresponding viewpoint as visited...
-            Viewpoint *master_vp = planner->GP.local_path[i];
+            Viewpoint* master_vp = planner->GP.local_path[i];
             master_vp->visited = true;
             master_vp->in_path = false;
             // target->visited = true;
@@ -437,9 +436,13 @@ void PlannerNode::drone_tracking() {
             // Delete from paths
             planner->GP.traced_path.push_back(planner->GP.adjusted_path[i]);
             // planner->GP.traced_path.push_back(*planner->GP.local_path[i]);
-            planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin(), planner->GP.adjusted_path.begin() + (i+1));
-            planner->GP.local_path.erase(planner->GP.local_path.begin(), planner->GP.local_path.begin() + (i+1));
-            
+            // planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin(), planner->GP.adjusted_path.begin() + (i+1));
+            // planner->GP.local_path.erase(planner->GP.local_path.begin(), planner->GP.local_path.begin() + (i+1));
+
+            // Remove only i from paths
+            planner->GP.adjusted_path.erase(planner->GP.adjusted_path.begin() + i);
+            planner->GP.local_path.erase(planner->GP.local_path.begin() + i);
+
             RCLCPP_INFO(this->get_logger(), "Reached Viewpoint: Deleting %d viewpoints from path", (i+1));
             break;
         }
@@ -447,7 +450,7 @@ void PlannerNode::drone_tracking() {
 }
 
 void PlannerNode::adjusted_viewpoints_callback(const nav_msgs::msg::Path::SharedPtr adjusted_vpts) {
-    if (adjusted_vpts->poses.empty()) return;
+    if (!adjusted_vpts) return;
 
     planner->GP.adjusted_path.clear();
     planner->GP.adjusted_path.reserve(adjusted_vpts->poses.size());
@@ -482,8 +485,10 @@ void PlannerNode::apply_viewpoint_adjustments() {
     auto &gvp      = gp.global_vpts;
     
     // 1) must be same size
-    assert(adjusted.size() == local.size());
+    // assert(adjusted.size() == local.size());
     
+    if (adjusted.size() != local.size()) return;
+
     // 2) walk backwards so indices don’t shift
     for (int i = (int)local.size() - 1; i >= 0; --i) {
         if (adjusted[i].invalid) {
@@ -535,21 +540,25 @@ void PlannerNode::run() {
     if (update_skeleton_flag) {
         planner->update_skeleton();
         update_skeleton_flag = false;
-        // publish_branches();
+        publish_branches();
     }
 
     publish_gskel();
     publish_viewpoints();
     publish_seen_voxels();
     
+    // planner->pose = {position, orientation};
+    // planner->plan_path();
+    // publish_path();
+
     // if (run_cnt >= 20) {
         
     if (planner->GS.global_vertices.empty()) return;
 
     if (!waiting_for_adjusted) {
+        drone_tracking();
         planner->pose = {position, orientation};
         planner->plan_path();
-        drone_tracking();
         publish_path();
         if (!planner->GP.local_path.empty()) {
             waiting_for_adjusted = true;
@@ -561,6 +570,7 @@ void PlannerNode::run() {
         vpts_adjusted = false;
         waiting_for_adjusted = false;
     }
+    
     // }
     // else run_cnt++;
 }
