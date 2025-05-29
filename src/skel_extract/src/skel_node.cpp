@@ -67,6 +67,7 @@ void SkeletonExtractionNode::init() {
     
     run_timer_ = this->create_wall_timer(std::chrono::milliseconds(run_timer_ms), std::bind(&SkeletonExtractionNode::run, this));
     vertex_pub_timer_ = this->create_wall_timer(std::chrono::milliseconds(vertex_pub_timer_ms), std::bind(&SkeletonExtractionNode::publish_vertices, this));
+
     tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -155,7 +156,8 @@ void SkeletonExtractionNode::publish_vertices() {
     if (skel_ex->SS.vertices_ && !skel_ex->SS.vertices_->empty()) {
         sensor_msgs::msg::PointCloud2 vertex_msg;
         pcl::toROSMsg(*skel_ex->SS.vertices_, vertex_msg);
-        vertex_msg.header.frame_id = local_frame_id;
+        // vertex_msg.header.frame_id = local_frame_id;
+        vertex_msg.header.frame_id = global_frame_id;
         vertex_msg.header.stamp = curr_tf.header.stamp;
         // vertex_msg.header.stamp = this->now();
         vertex_pub_->publish(vertex_msg);

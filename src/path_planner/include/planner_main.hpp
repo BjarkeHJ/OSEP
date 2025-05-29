@@ -14,7 +14,6 @@
 struct SkeletonVertex;
 struct Viewpoint;
 
-
 struct VoxelIndex {
     int x, y, z;
     bool operator==(const VoxelIndex &other) const {
@@ -67,24 +66,6 @@ struct UnionFind {
     }
 };
 
-struct MCTSNode {
-    Viewpoint* vp;
-    MCTSNode* parent;
-    std::vector<MCTSNode*> children;
-    int visits = 0;
-    double value = 0.0;
-    
-    std::set<Viewpoint*> visited;
-
-    MCTSNode(Viewpoint* vp, MCTSNode* parent=nullptr)
-        : vp(vp), parent(parent) {
-            if (parent && parent->visited.size()) {
-                visited = parent->visited;
-            }
-            visited.insert(vp);
-        }
-};
-
 struct DronePose {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
@@ -98,7 +79,8 @@ struct SkeletonVertex {
     bool just_approved = false;
     bool conf_check = false;
     bool freeze = false;
-    
+    bool marked_for_deletion = false;
+
     int smooth_iters_left = 3;
 
     int type = -1; // "0: invalid", "1: leaf", "2: branch", "3: joint" 
@@ -106,21 +88,15 @@ struct SkeletonVertex {
 
     bool updated = false;
     bool spawned_vpts = false;
-    int visited_cnt = 0;
-    int invalid = false; // If no proper viewpoint can be generated??
-
     std::vector<Viewpoint*> assigned_vpts;
 };
-
 
 struct Viewpoint {
     Eigen::Vector3d position;
     Eigen::Quaterniond orientation;
     std::vector<VoxelIndex> covered_voxels;
     int corresp_vertex_id;
-
     std::vector<Viewpoint*> adj;
-
     double score = 0.0f;
     bool in_path = false;
     bool visited = false;
@@ -130,10 +106,8 @@ struct Viewpoint {
 struct GlobalSkeleton {
     std::unordered_set<VoxelIndex, VoxelIndexHash> voxels;
     std::unordered_map<VoxelIndex, int, VoxelIndexHash> voxel_point_count;
-    std::unordered_map<VoxelIndex, int, VoxelIndexHash> seen_voxels;
-
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_seen_cloud;
     std::unordered_set<VoxelIndex, VoxelIndexHash> global_seen_voxels;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_seen_cloud;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_pts;
     
@@ -152,20 +126,13 @@ struct GlobalSkeleton {
 };
 
 struct GlobalPath {
-    bool started = false;
-    int vertex_start_id;
-    int curr_id;
-
-    int curr_branch;
     std::vector<int> vertex_nbs_id;
     Viewpoint start;
 
-    // std::vector<Viewpoint> global_vpts;
     std::list<Viewpoint> global_vpts;
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_vpts_cloud;
     pcl::KdTreeFLANN<pcl::PointXYZ> global_vpts_tree;
 
-    std::vector<int> vpt_connections; 
     std::vector<Viewpoint*> local_path; // Current local path being published
     std::vector<Viewpoint> adjusted_path;
     std::vector<Viewpoint> traced_path; // Add only when drone reaches the vpt
@@ -180,20 +147,16 @@ public:
     void plan_path();
     void update_skeleton();
         
-    /* Occupancy */
+    /* Occupancy and Coverage */
     void global_cloud_handler();
     void update_seen_cloud(Viewpoint *vp);
 
     /* Data */
     GlobalSkeleton GS;
     GlobalPath GP;
-    
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_pts;
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_vertices;
-
     DronePose pose;
-
-    bool planning_started = false;
 
 private:
     rclcpp::Node::SharedPtr node_;
@@ -214,54 +177,44 @@ private:
     /* Waypoint Generation and PathPlanning*/
     void viewpoint_sampling();
     void viewpoint_filtering();
+    void build_visibility_graph();
     void generate_path();
     void refine_path();
 
-    void build_visibility_graph();
-
-    void vpt_adj_step(Viewpoint* start, int steps, const Eigen::Vector2d& ref_dir_xy, std::vector<Viewpoint*>& out_vps);
+    void trigger_replan();
 
     std::vector<Viewpoint> generate_viewpoint(int id);
     std::vector<Viewpoint> vp_sample(const Eigen::Vector3d& origin, const std::vector<Eigen::Vector3d>& directions, std::vector<double> dists, int vertex_id);
     bool viewpoint_check(const Viewpoint& vp, pcl::KdTreeFLANN<pcl::PointXYZ>& voxel_tree);
     bool viewpoint_similarity(const Viewpoint& a, const Viewpoint& b);
-    void score_viewpoint(Viewpoint *vp);   
-
-    // std::vector<int> find_next_toward_furthest_leaf(int start_id, int max_steps);
-
+    void score_viewpoint(Viewpoint *vp);
     bool corridor_obstructed(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
     double distance_to_free_space(const Eigen::Vector3d &p, Eigen::Vector3d& dir);
-
-    std::vector<Viewpoint*> mcts_run(Viewpoint* start_vp);
-    double rollout(Viewpoint* start, std::set<Viewpoint*>& visited);
-    void delete_tree(MCTSNode* node);
+    std::vector<Viewpoint*> dfs_run(Viewpoint* start_vp, const int max_depth);
+    double dfs_reward(Viewpoint* node, Viewpoint* nb);
     int find_branch_index(int id);
 
-    std::vector<Viewpoint*> dfs_run(Viewpoint* start_vp, int max_depth);
-    double dfs_reward(Viewpoint* node, Viewpoint* nb);
-
     /* Data */
+    double mean_edge_dist = 1.0;
+    double mean_dfs_time = 0.0;
+    double mean_dfs_reward = 0.0;
+
+    int dfs_plan_cnt = 0;
     pcl::KdTreeFLANN<pcl::PointXYZ> global_pts_kdtree;
 
-    bool planner_flag = false;
-    bool first_plan = true;
-    bool first_sample = true;
-    bool get_branch_vertex = true;
-
-    int N_new_vers; // store number of new vertices for each iteration...
-    
     /* Params */
     int max_obs_wo_conf = 3; // Maximum number of runs without passing conf check before discarding...
     double fuse_dist_th = 3.0;
     double fuse_conf_th = 0.1;
-    double kf_pn = 0.5;
-    double kf_mn = 0.0001;
+    double kf_pn = 0.0001;
+    double kf_mn = 0.1;
     
     double voxel_size = 1.5;
     double fov_h = 90;
     double fov_v = 60;
     
     double disp_dist = 12;
+    double absolute_dist_th = 18;
     double min_view_dist = 4;
     double max_view_dist = 20;
     double safe_dist = 6;
@@ -269,31 +222,22 @@ private:
     
     double viewpoint_merge_dist = 3.0;
     double visibility_graph_radius = 20.0;
-    double mean_edge_dist = 1.0;
-    double gnd_th = 50.0;
+    double gnd_th = 60.0;
     
-    const int MAX_HORIZON = 3;
-    const int MCTS_ITER = 100;
-    const int ROLLOUT_DEPTH = 7;
-    const double UCB_CONSTANT = 5.0; // orig 1.41
-
+    const int MAX_HORIZON = 2;
     // const int DFS_MAX_DEPTH = 5;
-    // const int DFS_MAX_DEPTH = 7;
-    const int DFS_MAX_DEPTH = 10;
+    const int DFS_MAX_DEPTH = 7;
+    // const int DFS_MAX_DEPTH = 10;
+    const int BEAM_WIDTH = 3;
+    const double REPLAN_THRESH = 0.0;
 
-    const double LEAF_W = 2.0;
-    const double COVERAGE_W = 5.0;
-    const double DIST_W = 0.3;
-    const double REVISIT_W = 3.0;
-    const double BRANCH_W = 1.5;
-
-    // const int MCTS_ITER = 30;
-    // const int ROLLOUT_DEPTH = 3;
-    // const double UCB_CONSTANT = 1.41;
-    // const double LEAF_REWARD = 25.0;
-    // const double COVERAGE_REWARD = 10.0;
-    // const double REVISIT_PENALTY = 200.0;
+    const double LEAF_W = 10.0;
+    // const double LEAF_W = 3.0;
+    const double COVERAGE_W = 10.0;
+    const double BRANCH_W = 5.0;
+    // const double BRANCH_W = 1.5;
+    const double REVISIT_W = 7.0;
+    const double DIST_W = 1.0;
 };
-
 
 #endif //PLANNER_MAIN_

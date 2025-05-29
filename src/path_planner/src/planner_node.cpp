@@ -271,9 +271,9 @@ void PlannerNode::publish_gskel() {
         lines.action = visualization_msgs::msg::Marker::ADD;
         lines.pose.orientation.w = 1.0;
         lines.scale.x = 0.05;
-        lines.color.r = 0.2;
-        lines.color.g = 0.8;
-        lines.color.b = 0.4;
+        lines.color.r = 0.0;
+        lines.color.g = 0.0;
+        lines.color.b = 0.1;
         lines.color.a = 1.0;
 
         std::set<std::pair<int, int>> published_edges;
@@ -333,10 +333,10 @@ void PlannerNode::publish_viewpoints() {
     conns.action= visualization_msgs::msg::Marker::ADD;
 
     conns.pose.orientation.w = 1.0;
-    conns.scale.x = 0.05;
-    conns.color.r = 0.6;
-    conns.color.g = 0.2;
-    conns.color.b = 0.2;
+    conns.scale.x = 0.1;
+    conns.color.r = 1.0;
+    conns.color.g = 0.0;
+    conns.color.b = 0.0;
     conns.color.a = 1.0;
     
     geometry_msgs::msg::Point p1, p2;
@@ -399,12 +399,15 @@ void PlannerNode::init_path() {
     // first_vp->orientation = Eigen::Quaterniond::Identity();
 
     second_vp->position = Eigen::Vector3d(0.0, 0.0, 120.0);
+    // second_vp->position = Eigen::Vector3d(0.0, 0.0, 140.0);
     second_vp->orientation = Eigen::Quaterniond::Identity();
 
     third_vp->position = Eigen::Vector3d(100.0, 0.0, 120.0);
+    // third_vp->position = Eigen::Vector3d(100.0, 0.0, 140.0);
     third_vp->orientation = Eigen::Quaterniond::Identity();
 
     fourth_vp->position = Eigen::Vector3d(180.0, 0.0, 120.0);
+    // fourth_vp->position = Eigen::Vector3d(180.0, 0.0, 140.0);
     fourth_vp->orientation = Eigen::Quaterniond::Identity();
 
     // planner->GP.local_path.push_back(first_vp);
@@ -483,25 +486,18 @@ void PlannerNode::apply_viewpoint_adjustments() {
     auto &adjusted = gp.adjusted_path;
     auto &local    = gp.local_path;
     auto &gvp      = gp.global_vpts;
-    
-    // 1) must be same size
-    // assert(adjusted.size() == local.size());
-    
+
     if (adjusted.size() != local.size()) return;
 
-    // 2) walk backwards so indices don’t shift
     for (int i = (int)local.size() - 1; i >= 0; --i) {
         if (adjusted[i].invalid) {
-        // erase from global list
         Viewpoint* dead = local[i];
         for (auto it = gvp.begin(); it != gvp.end(); ++it) {
             if (&*it == dead) { gvp.erase(it); break; }
         }
-        // erase from local_path
         local.erase(local.begin() + i);
         }
         else {
-        // copy over updated data
         local[i]->position    = adjusted[i].position;
         local[i]->orientation = adjusted[i].orientation;
         }
