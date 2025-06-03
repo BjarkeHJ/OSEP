@@ -18,3 +18,4 @@ This repository is the implementation of an Online Skeleton Guided Path Planning
 ```
 
 ## Quick Start
+Refer to https://github.com/KasperMollerHansen/LVBM for simulation setup. 
