@@ -1,4 +1,4 @@
-# OSEP - Online Skeleton Extraction Pathplanner 
+# OSEP - Online Skeleton Extraction and Path Planning 
 
 ## Introduction
 This repository is the implementation of an Online Skeleton Guided Path Planning algorithm based on extraction of 
