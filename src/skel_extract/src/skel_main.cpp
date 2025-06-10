@@ -5,6 +5,9 @@ Implementation of ROSA Point Extraction
 with Implementation of Fallback strategies 
 for Planar Surfaces
 
+Implementation highly inspired by:
+https://github.com/HKUST-Aerial-Robotics/FC-Planner/tree/master/FC-Planner/src/rosa
+
 */
 
 #include <skel_main.hpp>
